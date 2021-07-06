@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mapsprojects">
-
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -11,18 +11,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        <meta-data android:name="com.here.sdk.access_key_id" android:value="o3Chk1McCkTijJ2OzBioxw" />
+        <meta-data android:name="com.here.sdk.access_key_secret" android:value="gRxcOBYq1CKzSIMyMzhbHph5r-6PMSeLRBrprtlz4ycHNGYVwOQDofz06LBxQ4SwlIAGc4zJgghfkl7UUwNRDg" />
         <service
             android:name=".ViewModel.GetLocationService"
             android:enabled="true"
             android:exported="true"></service>
-
         <activity android:name=".View.LoginActivity">
-
         </activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

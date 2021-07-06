@@ -1,5 +1,7 @@
 package com.example.mapsprojects;
 
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,27 +16,79 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mapsprojects.View.LoginActivity;
 import com.example.mapsprojects.ViewModel.GetLocationService;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.here.sdk.core.Anchor2D;
+import com.here.sdk.core.Color;
+import com.here.sdk.core.GeoCoordinates;
+import com.here.sdk.core.GeoPolyline;
+import com.here.sdk.core.LanguageCode;
+import com.here.sdk.core.Point2D;
+import com.here.sdk.core.errors.InstantiationErrorException;
+import com.here.sdk.mapview.MapError;
+import com.here.sdk.mapview.MapImage;
+import com.here.sdk.mapview.MapImageFactory;
+import com.here.sdk.mapview.MapMarker;
+import com.here.sdk.mapview.MapPolyline;
+import com.here.sdk.mapview.MapScene;
+import com.here.sdk.mapview.MapScheme;
+import com.here.sdk.mapview.MapView;
+import com.here.sdk.routing.AvoidanceOptions;
+import com.here.sdk.routing.CalculateRouteCallback;
+import com.here.sdk.routing.CarOptions;
+import com.here.sdk.routing.OptimizationMode;
+import com.here.sdk.routing.Route;
+import com.here.sdk.routing.RouteOptions;
+import com.here.sdk.routing.RouteTextOptions;
+import com.here.sdk.routing.RoutingEngine;
+import com.here.sdk.routing.RoutingError;
+import com.here.sdk.routing.Waypoint;
+import com.here.sdk.search.Place;
+import com.here.sdk.search.SearchCallback;
+import com.here.sdk.search.SearchEngine;
+import com.here.sdk.search.SearchError;
+import com.here.sdk.search.SearchOptions;
+import com.here.sdk.search.TextQuery;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     LocationBroadcastReceiver receiver;
-
+    private MapView mapView;
+    private Button btnSearch ;
+    private EditText edAddress ;
+    private SearchEngine searchEngine;
+    FusedLocationProviderClient fusedLocationProviderClient;
+    private RoutingEngine routingEngine ; // công cụ định tuyến
+    private List<Waypoint> waypoints = new ArrayList<>(); // Danh sách các điểm tham chiếu
+    private List<MapMarker> waypointMarkers = new ArrayList<>(); //
+    private MapPolyline routePolyline ;
+    private android.location.Location location;
     TextView tv_test_location;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        declare();
+        btnSearch = findViewById(R.id.btnSearch);
+        mapView = findViewById(R.id.viewMap);
+        btnSearch = findViewById(R.id.btnSearch);
+        edAddress = findViewById(R.id.edSearch);
+        mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
         receiver = new LocationBroadcastReceiver();
-
+        declare();
+        loadMap();
         // Yêu cầu bật Vị trí
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -42,6 +96,23 @@ public class MainActivity extends AppCompatActivity {
                 buildAlertMessageNoLocation();
             }
         }
+        try {
+            routingEngine = new RoutingEngine();
+        } catch (InstantiationErrorException e) {
+            e.printStackTrace();
+        }
+        try {
+            searchEngine = new SearchEngine();
+        } catch (InstantiationErrorException e) {
+            throw new RuntimeException("Initialization of SearchEngine failed: " + e.error.name());
+        }
+        btnSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String address = edAddress.getText().toString();
+                searchLocation(v ,address);
+            }
+        });
 //        else {
 //            startLocService();
 //        }
@@ -64,8 +135,11 @@ public class MainActivity extends AppCompatActivity {
 
     // Hàm khai báo
     void declare(){
-        tv_test_location = findViewById(R.id.tv_test_location);
+
+
+
     }
+
 
     // Hàm gọi Service
     void startLocService() {
@@ -84,11 +158,128 @@ public class MainActivity extends AppCompatActivity {
             if (intent.getAction().equals("ACT_LOC")) {
 //                double lat = intent.getDoubleExtra("latitude", 0f);
 //                double longitude = intent.getDoubleExtra("longitude", 0f);
-                Location location = intent.getParcelableExtra("lastLocation");
-                tv_test_location.setText("Vị trí: " + location.getLatitude() + "--" + location.getLongitude());
+                Location mlocation = intent.getParcelableExtra("lastLocation");
+                location = mlocation;
+//                tv_test_location.setText("Vị trí: " + location.getLatitude() + "--" + location.getLongitude());
+                GeoCoordinates geoCoordinates = new GeoCoordinates(10.4618459 , 105.6435472);
+                //   loadMap();
+                MapImage mapImage = MapImageFactory.fromResource(getApplicationContext().getResources(), R.drawable.location);
+                Anchor2D anchor2D = new Anchor2D(0.5F, 1);
+                MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
+                mapView.getMapScene().addMapMarker(mapMarker);
+                waypointMarkers.add(mapMarker);
+                waypoints.add(new Waypoint(geoCoordinates));
                 Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
             }
         }
+    }
+    private void loadMap()
+    {
+        GeoCoordinates geoCoordinates = new GeoCoordinates(10.46171 , 105.64354);
+        //   GeoCoordinates geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
+        mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
+            @Override
+            public void onLoadScene(@Nullable MapError mapError) {
+                if (mapError == null) {
+                    double distanceInMeters = 1000;
+                    mapView.getCamera().lookAt(
+                            //        new GeoCoordinates(10.46384,  105.6441), distanceInMeters);
+                            geoCoordinates,distanceInMeters);
+                } else {
+                    Log.d("Log", "Loading map failed: mapError: " + mapError.name());
+                }
+            }
+        });
+    }
+    private void searchLocation(View view , String address)
+    {
+        int maxItems = 30;
+        SearchOptions searchOptions = new SearchOptions(LanguageCode.VI_VN, maxItems);
+        TextQuery query = new TextQuery(address, getScreenCenter());
+        searchEngine.search(query, searchOptions, new SearchCallback() {
+            @Override
+            public void onSearchCompleted(@Nullable SearchError searchError, @Nullable List<Place> list) {
+                for (Place result : list)
+                {
+                    GeoCoordinates geoCoordinates = result.getGeoCoordinates();
+                    MapImage mapImage = MapImageFactory.fromResource(getApplicationContext().getResources(), R.drawable.location);
+                    Anchor2D anchor2D = new Anchor2D(0.5F, 1);
+                    MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
+
+                    mapView.getMapScene().addMapMarker(mapMarker);
+
+                    waypointMarkers.add(mapMarker);
+                    waypoints.add(new Waypoint(geoCoordinates));
+                    calculateRoute();
+                    TextView textView = new TextView(getApplicationContext());
+                    textView.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
+                    textView.setText(result.getTitle());
+                    LinearLayout linearLayout = new LinearLayout(getApplicationContext());
+                    linearLayout.setBackgroundResource(R.color.blue);
+                    linearLayout.setPadding(10,10,10,10);
+                    linearLayout.addView(textView);
+                    mapView.pinView(linearLayout, result.getGeoCoordinates());
+
+                }
+            }
+        });
+
+
+    }
+
+    // Tính quản dường
+    public void calculateRoute()
+    {
+        Log.e("Log", "VAO : " + waypointMarkers.size() + " | " + waypoints.size());
+        RouteOptions routeOptions = new RouteOptions();
+        routeOptions.alternatives = 3 ;
+        routeOptions.optimizationMode = OptimizationMode.FASTEST;
+        CarOptions options = new CarOptions(routeOptions, new RouteTextOptions(), new AvoidanceOptions());
+        routingEngine.calculateRoute(
+                waypoints,
+                options,
+                new CalculateRouteCallback() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
+                    @Override
+                    public void onRouteCalculated(@Nullable RoutingError routingError, @Nullable  List<Route> list) {
+                        if (routingError == null)
+                        {
+                            Route route = list.get(0);
+                            Log.e("Log", "VAO on RouteCalculated : " + list);
+                            drawRoute(route);
+                        }
+                        else {
+                            Toast.makeText(getApplicationContext(), "Error Route !!!" , Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+
+        );
+
+    }
+    private GeoCoordinates getScreenCenter()
+    {
+        int screenWidthInPixel = mapView.getWidth();
+        int screenHeightInPixel = mapView.getHeight();
+        Point2D point = new Point2D(screenWidthInPixel * 0.5 , screenHeightInPixel * 0.5);
+        return mapView.viewToGeoCoordinates(point);
+    }
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void drawRoute(Route route) {
+        GeoPolyline routeGeoPolyline ;
+        Log.e("Log", "VAO DRAWROUTE");
+        try {
+            routeGeoPolyline = new GeoPolyline(route.getPolyline());
+        } catch (InstantiationErrorException e) {
+            return;
+        }
+        Color fillColor = Color.valueOf(0, 0.56f, 0.54f, 0.63f);
+        routePolyline = new MapPolyline(routeGeoPolyline , 20 ,fillColor);
+
+        mapView.getMapScene().addMapPolyline(routePolyline);
+
+        Toast.makeText(getApplicationContext(), "Your destination is " + route.getLengthInMeters() + " meters away !!! ", Toast.LENGTH_LONG).show();
+
     }
 
     // Hàm cho nút Log out
