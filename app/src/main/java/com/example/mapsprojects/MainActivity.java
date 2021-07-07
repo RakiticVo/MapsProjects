@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity {
 
     LocationBroadcastReceiver receiver;
     private MapView mapView;
-    private Button btnSearch;
+    private Button btnSearch , btnHistory;
     private EditText edAddress;
     private SearchEngine searchEngine;
     FusedLocationProviderClient fusedLocationProviderClient;
@@ -108,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
         mapView = findViewById(R.id.viewMap);
         btnSearch = findViewById(R.id.btnSearch);
         edAddress = findViewById(R.id.edSearch);
+        btnHistory = findViewById(R.id.btnHistory);
+
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
 
         receiver = new LocationBroadcastReceiver();
@@ -130,15 +132,31 @@ public class MainActivity extends AppCompatActivity {
         } catch (InstantiationErrorException e) {
             throw new RuntimeException("Initialization of SearchEngine failed: " + e.error.name());
         }
+        event();
+
+    }
+
+    private void event()
+    {
         btnSearch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String address = edAddress.getText().toString();
-                searchLocation(v, address);
+                if (!address.equals(""))
+                {
+                    searchLocation(v, address);
+                }
+
+            }
+        });
+        btnHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext() , HistoryActivity.class);
+                startActivity(intent);
             }
         });
     }
-
     // Hàm chuyển đến cài đặt Vị trí
     private void buildAlertMessageNoLocation() {
         new AlertDialog.Builder(this)
