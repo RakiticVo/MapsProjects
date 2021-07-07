@@ -1,16 +1,20 @@
 package com.example.mapsprojects;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Build;
@@ -27,6 +31,11 @@ import android.widget.Toast;
 import com.example.mapsprojects.View.LoginActivity;
 import com.example.mapsprojects.ViewModel.GetLocationService;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.here.sdk.core.Anchor2D;
 import com.here.sdk.core.Color;
 import com.here.sdk.core.GeoCoordinates;
@@ -34,6 +43,9 @@ import com.here.sdk.core.GeoPolyline;
 import com.here.sdk.core.LanguageCode;
 import com.here.sdk.core.Point2D;
 import com.here.sdk.core.errors.InstantiationErrorException;
+import com.here.sdk.gestures.TapListener;
+import com.here.sdk.mapview.LocationIndicator;
+import com.here.sdk.mapview.MapCamera;
 import com.here.sdk.mapview.MapError;
 import com.here.sdk.mapview.MapImage;
 import com.here.sdk.mapview.MapImageFactory;
@@ -45,6 +57,7 @@ import com.here.sdk.mapview.MapView;
 import com.here.sdk.routing.AvoidanceOptions;
 import com.here.sdk.routing.CalculateRouteCallback;
 import com.here.sdk.routing.CarOptions;
+import com.here.sdk.routing.EVCarOptions;
 import com.here.sdk.routing.OptimizationMode;
 import com.here.sdk.routing.Route;
 import com.here.sdk.routing.RouteOptions;
@@ -59,24 +72,34 @@ import com.here.sdk.search.SearchError;
 import com.here.sdk.search.SearchOptions;
 import com.here.sdk.search.TextQuery;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.logging.Handler;
 
 public class MainActivity extends AppCompatActivity {
 
     LocationBroadcastReceiver receiver;
     private MapView mapView;
-    private Button btnSearch ;
-    private EditText edAddress ;
+    private Button btnSearch;
+    private EditText edAddress;
     private SearchEngine searchEngine;
     FusedLocationProviderClient fusedLocationProviderClient;
-    private RoutingEngine routingEngine ; // công cụ định tuyến
+    private RoutingEngine routingEngine; // công cụ định tuyến
     private List<Waypoint> waypoints = new ArrayList<>(); // Danh sách các điểm tham chiếu
     private List<MapMarker> waypointMarkers = new ArrayList<>(); //
-    private MapPolyline routePolyline ;
+    private MapPolyline routePolyline;
+    LocationIndicator locationIndicator = new LocationIndicator();
+    LocationCallback locationCallback;
     private android.location.Location location;
     TextView tv_test_location;
-
+    private MapCamera.OrientationUpdate cameraOrientation ;
+    private double bearingInDegrees ;
+    private double tilInDegrees ;
+    private GeoCoordinates cameraCoordinates ;
+    private double distanceInMeters;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,6 +109,7 @@ public class MainActivity extends AppCompatActivity {
         btnSearch = findViewById(R.id.btnSearch);
         edAddress = findViewById(R.id.edSearch);
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
+
         receiver = new LocationBroadcastReceiver();
         declare();
         loadMap();
@@ -110,12 +134,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 String address = edAddress.getText().toString();
-                searchLocation(v ,address);
+                searchLocation(v, address);
             }
         });
-//        else {
-//            startLocService();
-//        }
     }
 
     // Hàm chuyển đến cài đặt Vị trí
@@ -134,8 +155,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Hàm khai báo
-    void declare(){
-
+    void declare() {
 
 
     }
@@ -151,6 +171,23 @@ public class MainActivity extends AppCompatActivity {
         startService(intent);
     }
 
+    // Get Location
+    private void getLocation() {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+            fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+                @Override
+                public void onComplete(@NonNull @NotNull Task<Location> task) {
+                    Location mlocation = task.getResult();
+                    location = mlocation;
+                    loadMap();
+                    Log.e("Log", "Location : Latitude  " + location.getLatitude() + " | Longitude : " + location.getLongitude());
+                }
+            });
+    }
+
     // Hàm tạo ra một BR
     public class LocationBroadcastReceiver extends BroadcastReceiver {
         @Override
@@ -161,35 +198,50 @@ public class MainActivity extends AppCompatActivity {
                 Location mlocation = intent.getParcelableExtra("lastLocation");
                 location = mlocation;
 //                tv_test_location.setText("Vị trí: " + location.getLatitude() + "--" + location.getLongitude());
-                GeoCoordinates geoCoordinates = new GeoCoordinates(10.4618459 , 105.6435472);
+                GeoCoordinates geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
                 //   loadMap();
                 MapImage mapImage = MapImageFactory.fromResource(getApplicationContext().getResources(), R.drawable.location);
                 Anchor2D anchor2D = new Anchor2D(0.5F, 1);
                 MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
-                mapView.getMapScene().addMapMarker(mapMarker);
+              //  mapView.getMapScene().addMapMarker(mapMarker);
                 waypointMarkers.add(mapMarker);
                 waypoints.add(new Waypoint(geoCoordinates));
+                mapView.removeLifecycleListener(locationIndicator);
+                loadMap();
                 Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
             }
         }
     }
     private void loadMap()
     {
-        GeoCoordinates geoCoordinates = new GeoCoordinates(10.46171 , 105.64354);
-        //   GeoCoordinates geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
-        mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
-            @Override
-            public void onLoadScene(@Nullable MapError mapError) {
-                if (mapError == null) {
-                    double distanceInMeters = 1000;
-                    mapView.getCamera().lookAt(
-                            //        new GeoCoordinates(10.46384,  105.6441), distanceInMeters);
-                            geoCoordinates,distanceInMeters);
-                } else {
-                    Log.d("Log", "Loading map failed: mapError: " + mapError.name());
+     //   GeoCoordinates geoCoordinates = new GeoCoordinates(10.46171 , 105.64354);
+        GeoCoordinates geoCoordinates;
+        try {
+            bearingInDegrees = -360 ;
+            tilInDegrees = 0 ;
+            distanceInMeters = 1000;
+            cameraOrientation = new MapCamera.OrientationUpdate(bearingInDegrees, tilInDegrees);
+            cameraCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
+            mapView.getCamera().lookAt(cameraCoordinates, cameraOrientation, distanceInMeters);
+             geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
+            mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
+                @Override
+                public void onLoadScene(@Nullable MapError mapError) {
+                    if (mapError == null) {
+                        double distanceInMeters = 1000;
+                        mapView.getCamera().lookAt(
+                                //        new GeoCoordinates(10.46384,  105.6441), distanceInMeters);
+                                geoCoordinates,distanceInMeters);
+                        addLocationIndicator(geoCoordinates,LocationIndicator.IndicatorStyle.NAVIGATION);
+                    } else {
+                        Log.d("Log", "Loading map failed: mapError: " + mapError.name());
+                    }
                 }
-            }
-        });
+            });
+        }catch (Exception e)
+        {
+            getLocation();
+        }
     }
     private void searchLocation(View view , String address)
     {
@@ -205,9 +257,7 @@ public class MainActivity extends AppCompatActivity {
                     MapImage mapImage = MapImageFactory.fromResource(getApplicationContext().getResources(), R.drawable.location);
                     Anchor2D anchor2D = new Anchor2D(0.5F, 1);
                     MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
-
                     mapView.getMapScene().addMapMarker(mapMarker);
-
                     waypointMarkers.add(mapMarker);
                     waypoints.add(new Waypoint(geoCoordinates));
                     calculateRoute();
@@ -226,7 +276,6 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
-
     // Tính quản dường
     public void calculateRoute()
     {
@@ -275,11 +324,8 @@ public class MainActivity extends AppCompatActivity {
         }
         Color fillColor = Color.valueOf(0, 0.56f, 0.54f, 0.63f);
         routePolyline = new MapPolyline(routeGeoPolyline , 20 ,fillColor);
-
         mapView.getMapScene().addMapPolyline(routePolyline);
-
         Toast.makeText(getApplicationContext(), "Your destination is " + route.getLengthInMeters() + " meters away !!! ", Toast.LENGTH_LONG).show();
-
     }
 
     // Hàm cho nút Log out
@@ -289,6 +335,19 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("checked",false);
         editor.commit();
         startActivity(new Intent(this, LoginActivity.class));
+    }
+    private void addLocationIndicator(GeoCoordinates geoCoordinates,
+                                      LocationIndicator.IndicatorStyle indicatorStyle) {
+
+        locationIndicator.setLocationIndicatorStyle(indicatorStyle);
+        com.here.sdk.core.Location location = new com.here.sdk.core.Location.Builder()
+                .setCoordinates(geoCoordinates)
+                .setTimestamp(new Date())
+                .build();
+        locationIndicator.updateLocation(location);
+        // A LocationIndicator listens to the lifecycle of the map view,
+        // therefore, for example, it will get destroyed when the map view gets destroyed.
+        mapView.addLifecycleListener(locationIndicator);
     }
 
     @Override
