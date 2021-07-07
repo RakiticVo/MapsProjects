@@ -7,36 +7,49 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
+        android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-        <TextView
-            android:id="@+id/tv_hello_user"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:layout_marginTop="8dp"
-            android:text="Xin chào"
-            android:textSize="22sp"
-            app:layout_constraintBottom_toBottomOf="parent"
+        <EditText
+            android:layout_marginLeft="5dp"
+            android:id="@+id/edSearch"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:hint="Enter address"
+            android:textSize="12dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+        <androidx.appcompat.widget.LinearLayoutCompat
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/btnSearch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/blue"
+                android:text="SEARCH"
+                android:textSize="10sp"
+                />
+            <Button
+                android:id="@+id/btnHistory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/blue"
+                android:text="HISTORY"
+                android:textSize="10sp"
+                />
+            <Button
+                android:backgroundTint="@color/blue"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:onClick="onLogoutClick"
+                android:text="Log out"
+                android:textSize="10sp"
+                />
+        </androidx.appcompat.widget.LinearLayoutCompat>
 
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginRight="16dp"
-            android:onClick="onLogoutClick"
-            android:text="Log out"
-            android:textSize="18sp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintVertical_bias="0.0" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </LinearLayout>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -45,40 +58,6 @@
             android:id="@+id/viewMap"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
-        <EditText
-            android:id="@+id/edSearch"
-            android:layout_marginRight="120dp"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginLeft="20dp"
-            android:layout_marginTop="20dp"
-            android:hint="Enter address"
-            android:textSize="20dp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:id="@+id/btnSearch"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:layout_marginRight="20dp"
-            android:backgroundTint="@color/blue"
-            android:text="SEARCH"
-            android:textSize="15dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/edSearch"
-            app:layout_constraintTop_toTopOf="parent" />
-        <Button
-            android:visibility="gone"
-            android:layout_marginTop="20dp"
-            android:layout_marginRight="20dp"
-            android:id="@+id/btnCamare"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="CAMERA"
-            android:textSize="15dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
