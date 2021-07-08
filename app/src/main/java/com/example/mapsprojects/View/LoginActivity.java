@@ -9,14 +9,24 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mapsprojects.MainActivity;
+import com.example.mapsprojects.Model.User;
 import com.example.mapsprojects.R;
+import com.example.mapsprojects.ViewModel.RetrofitAPI;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -26,6 +36,7 @@ public class LoginActivity extends AppCompatActivity {
 
     EditText edt_username, edt_password;
     CheckBox cb_remember;
+    TextView tv_result;
     SharedPreferences sharedPreferences;
 
     @Override

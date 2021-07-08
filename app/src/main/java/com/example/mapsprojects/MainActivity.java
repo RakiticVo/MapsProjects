@@ -28,8 +28,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mapsprojects.Model.User;
 import com.example.mapsprojects.View.LoginActivity;
 import com.example.mapsprojects.ViewModel.GetLocationService;
+import com.example.mapsprojects.ViewModel.RetrofitAPI;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
@@ -78,6 +80,10 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Handler;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -226,6 +232,7 @@ public class MainActivity extends AppCompatActivity {
                 waypoints.add(new Waypoint(geoCoordinates));
                 mapView.removeLifecycleListener(locationIndicator);
                 loadMap();
+                updateLocationonServer(mlocation);
                 Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
             }
         }
@@ -241,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
             cameraOrientation = new MapCamera.OrientationUpdate(bearingInDegrees, tilInDegrees);
             cameraCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
             mapView.getCamera().lookAt(cameraCoordinates, cameraOrientation, distanceInMeters);
-             geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
+            geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
             mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
                 @Override
                 public void onLoadScene(@Nullable MapError mapError) {
@@ -261,6 +268,7 @@ public class MainActivity extends AppCompatActivity {
             getLocation();
         }
     }
+
     private void searchLocation(View view , String address)
     {
         int maxItems = 30;
@@ -294,6 +302,7 @@ public class MainActivity extends AppCompatActivity {
 
 
     }
+
     // Tính quản dường
     public void calculateRoute()
     {
@@ -324,6 +333,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
     }
+
     private GeoCoordinates getScreenCenter()
     {
         int screenWidthInPixel = mapView.getWidth();
@@ -331,6 +341,7 @@ public class MainActivity extends AppCompatActivity {
         Point2D point = new Point2D(screenWidthInPixel * 0.5 , screenHeightInPixel * 0.5);
         return mapView.viewToGeoCoordinates(point);
     }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void drawRoute(Route route) {
         GeoPolyline routeGeoPolyline ;
@@ -354,6 +365,7 @@ public class MainActivity extends AppCompatActivity {
         editor.commit();
         startActivity(new Intent(this, LoginActivity.class));
     }
+
     private void addLocationIndicator(GeoCoordinates geoCoordinates,
                                       LocationIndicator.IndicatorStyle indicatorStyle) {
 
@@ -366,6 +378,46 @@ public class MainActivity extends AppCompatActivity {
         // A LocationIndicator listens to the lifecycle of the map view,
         // therefore, for example, it will get destroyed when the map view gets destroyed.
         mapView.addLifecycleListener(locationIndicator);
+    }
+
+    private void updateLocationonServer(Location location){
+        final int[] id = {0};
+        // lấy data(id) từ Server
+        RetrofitAPI.apiService.getData().enqueue(new Callback<List<User>>() {
+            @Override
+            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                List<User> user = response.body();
+                if (user != null){
+                    for (int i = 0; i<user.size(); i++){
+                        Log.e("TAG3", "" + user.get(i).getId());
+                        id[0] = user.get(i).getId();
+                    }
+                }
+                // Cập nhật Current Location lên Server
+                // Ví dụ: http://192.168.1.37/mapsproject/updatedata.php?id=1&currentLocation=465,431
+                // Nhập vào các giá trị có trong đường link API theo từng đối tượng
+                String currentLocation = location.getLatitude() +"--"+ location.getLongitude();
+                Log.e("TAG2", "" + id[0]);
+                RetrofitAPI.apiService.updateUser(id[0], currentLocation)
+                        .enqueue(new Callback<String>() {
+                            @Override
+                            public void onResponse(Call<String> call, Response<String> response) {
+                                Log.e("TAG", "Success: " + response.message());
+                            }
+
+                            @Override
+                            public void onFailure(Call<String> call, Throwable t) {
+                                Log.e("TAG", "onFailure: " + t.getMessage());
+                                //Toast.makeText(MainActivity.this, "Call Error: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        });
+            }
+
+            @Override
+            public void onFailure(Call<List<User>> call, Throwable t) {
+                Log.e("TAG", "onFailure: " + t.getMessage());
+            }
+        });
     }
 
     @Override

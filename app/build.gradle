@@ -1,10 +1,13 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.gms.google-services'
 }
 
 android {
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
+
+
 
     defaultConfig {
         applicationId "com.example.mapsprojects"
@@ -13,6 +16,7 @@ android {
         versionCode 1
         versionName "1.0"
 
+        ndkVersion "21.4.7075529"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -44,4 +48,15 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     implementation 'com.google.android.gms:play-services-location:18.0.0'
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:28.2.0')
+    // Add the dependency for the Firebase SDK for Google Analytics
+    // When using the BoM, don't specify versions in Firebase dependencies
+    implementation 'com.google.firebase:firebase-analytics'
+
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    // Gson Google
+    implementation 'com.google.code.gson:gson:2.8.7'
 }
