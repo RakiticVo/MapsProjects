@@ -9,14 +9,21 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.mapsprojects.MainActivity;
+import com.example.mapsprojects.Model.User;
 import com.example.mapsprojects.R;
+import com.example.mapsprojects.ViewModel.APIService;
+
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -87,18 +94,33 @@ public class LoginActivity extends AppCompatActivity {
     public void onLoginClick(View view) {
         String username = edt_username.getText().toString();
         String password = edt_password.getText().toString();
-        if (username.equals("Google Maps") && password.equals("123")){
-            Toast.makeText(this, "Log in success", Toast.LENGTH_SHORT).show();
-            if (cb_remember.isChecked()){
-                // Nếu có check thì lưu tài khoản và mật khẩu
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString("username", username);
-                editor.putString("password", password);
-                editor.putBoolean("checked", true);
-                editor.commit();
+        // Get data từ Server
+        APIService.apiService.getData().enqueue(new Callback<List<User>>() {
+            @Override
+            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                List<User> api_user = response.body();
+                if (api_user != null) {
+                    for (int i = 0; i < api_user.size(); i++) {
+                        if (username.equals(api_user.get(i).getUserName())){
+                            Toast.makeText(getApplicationContext(), "Log in success", Toast.LENGTH_SHORT).show();
+                            if (cb_remember.isChecked()){
+                                // Nếu có check thì lưu tài khoản và mật khẩu
+                                SharedPreferences.Editor editor = sharedPreferences.edit();
+                                editor.putString("username", username);
+                                editor.putString("password", password);
+                                editor.putBoolean("checked", true);
+                                editor.commit();
+                            }
+                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                        }else Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
+                    }
+                }
             }
-            startActivity(new Intent(this, MainActivity.class));
-        }else Toast.makeText(this, "Log in fail", Toast.LENGTH_SHORT).show();
+            @Override
+            public void onFailure(Call<List<User>> call, Throwable t) {
+                Log.e("TAG5", "Failed" + t.getMessage());
+            }
+        });
     }
 
     public void onCancelClick(View view) {

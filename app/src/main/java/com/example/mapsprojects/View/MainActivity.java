@@ -1,4 +1,4 @@
-package com.example.mapsprojects;
+package com.example.mapsprojects.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,8 +31,7 @@ import android.widget.Toast;
 
 import com.example.mapsprojects.Model.User;
 import com.example.mapsprojects.Model.locationModel;
-import com.example.mapsprojects.View.HistoryActivity;
-import com.example.mapsprojects.View.LoginActivity;
+import com.example.mapsprojects.R;
 import com.example.mapsprojects.ViewModel.APIService;
 import com.example.mapsprojects.ViewModel.GetLocationService;
 import com.example.mapsprojects.ViewModel.LocationDatabase;
