@@ -29,9 +29,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mapsprojects.Model.User;
 import com.example.mapsprojects.Model.locationModel;
 import com.example.mapsprojects.View.HistoryActivity;
 import com.example.mapsprojects.View.LoginActivity;
+import com.example.mapsprojects.ViewModel.APIService;
 import com.example.mapsprojects.ViewModel.GetLocationService;
 import com.example.mapsprojects.ViewModel.LocationDatabase;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -81,6 +83,10 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class MainActivity extends AppCompatActivity {
 
     LocationBroadcastReceiver receiver;
@@ -114,8 +120,6 @@ public class MainActivity extends AppCompatActivity {
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
 
         receiver = new LocationBroadcastReceiver();
-        declare();
-        loadMap();
         // Yêu cầu bật Vị trí
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -175,13 +179,6 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Hàm khai báo
-    void declare() {
-
-
-    }
-
-
     // Hàm gọi Service
     void startLocService() {
         IntentFilter filter = new IntentFilter("ACT_LOC");
@@ -229,15 +226,46 @@ public class MainActivity extends AppCompatActivity {
                 waypoints.add(new Waypoint(geoCoordinates));
                 mapView.removeLifecycleListener(locationIndicator);
                 loadMap();
-                Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
-                count ++ ;
-                if (count == 2)
-                {
-                    String locationString = location.getLatitude() + "," + location.getLongitude();
-                    addLocationRoom(locationString);
-                    count = 0;
+                final String[] userName = {""};
+                final int[] id = {0};
+                // Get data từ Server
+                APIService.apiService.getData().enqueue(new Callback<List<User>>() {
+                    @Override
+                    public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+                        List<User> api_user = response.body();
+                        if (api_user != null){
+                            for (int i = 0; i<api_user.size(); i++){
+                                id[0] = api_user.get(i).getId();
+                                userName[0] = api_user.get(i).getUserName();
+                            }
+                        }
+                        count ++ ;
+                        if (count == 2)
+                        {
+                            String currentLocation = mlocation.getLatitude() + "," + mlocation.getLongitude();
+                            // Update Current Location on Server
+                            APIService.apiService.updateCurrentLocation(id[0], currentLocation).enqueue(new Callback<String>() {
+                                @Override
+                                public void onResponse(Call<String> call, Response<String> response) {
+                                    Log.e("TAG5", "Success" + response.body());
+                                }
 
-                }
+                                @Override
+                                public void onFailure(Call<String> call, Throwable t) {
+                                    Log.e("TAG5", "Failed" + t.getMessage());
+                                }
+                            });
+                            addLocationRoom(currentLocation, userName[0]);
+                            count = 0;
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<List<User>> call, Throwable t) {
+                        Log.e("TAG5", "Failed" + t.getMessage());
+                    }
+                });
+                Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
 
             }
         }
@@ -303,8 +331,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-
-
     }
     // Tính quản dường
     public void calculateRoute()
@@ -380,16 +406,30 @@ public class MainActivity extends AppCompatActivity {
         mapView.addLifecycleListener(locationIndicator);
     }
 
-    private void addLocationRoom(String mlocation) {
+    private void addLocationRoom(String currentLocation, String userName) {
         DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
         String date = df.format(Calendar.getInstance().getTime());
-        if (TextUtils.isEmpty(date) || TextUtils.isEmpty(mlocation)) {
+        if (TextUtils.isEmpty(date) || TextUtils.isEmpty(currentLocation)) {
             return;
         }
-        locationModel model = new locationModel(mlocation, date);
+        locationModel model = new locationModel(currentLocation, date);
         LocationDatabase.getInstance(this).locationDAO().insertUser(model);
-        Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();
+        // Create new Location in table Route on Server
+        APIService.apiService.postLocation(userName, currentLocation, date).enqueue(new Callback<String>() {
+            @Override
+            public void onResponse(Call<String> call, Response<String> response) {
+                Log.e("TAG5", "Success" + response.body());
+            }
+
+            @Override
+            public void onFailure(Call<String> call, Throwable t) {
+                Log.e("TAG5", "Failed" + t.getMessage());
+            }
+        });
     }
+
+
     @Override
     protected void onPause() {
         super.onPause();
