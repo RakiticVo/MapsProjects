@@ -17,7 +17,7 @@ import android.widget.Toast;
 
 import com.example.mapsprojects.Model.User;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.ViewModel.APIService;
+import com.example.mapsprojects.Retrofit.APIService;
 
 import java.util.List;
 

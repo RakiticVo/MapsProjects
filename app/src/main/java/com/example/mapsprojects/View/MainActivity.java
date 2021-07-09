@@ -32,7 +32,7 @@ import android.widget.Toast;
 import com.example.mapsprojects.Model.User;
 import com.example.mapsprojects.Model.locationModel;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.ViewModel.APIService;
+import com.example.mapsprojects.Retrofit.APIService;
 import com.example.mapsprojects.ViewModel.GetLocationService;
 import com.example.mapsprojects.ViewModel.LocationDatabase;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -418,12 +418,12 @@ public class MainActivity extends AppCompatActivity {
         APIService.apiService.postLocation(userName, currentLocation, date).enqueue(new Callback<String>() {
             @Override
             public void onResponse(Call<String> call, Response<String> response) {
-                Log.e("TAG5", "Success" + response.body());
+                Log.e("TAG6", "Success" + response.body());
             }
 
             @Override
             public void onFailure(Call<String> call, Throwable t) {
-                Log.e("TAG5", "Failed" + t.getMessage());
+                Log.e("TAG6", "Failed" + t.getMessage());
             }
         });
     }
