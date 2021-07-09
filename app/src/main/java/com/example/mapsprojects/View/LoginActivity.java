@@ -46,6 +46,7 @@ public class LoginActivity extends AppCompatActivity {
         // lấy giá trị sharedPreferences và tự động đăng nhập
         if (sharedPreferences.getBoolean("checked", false) == true){
             startActivity(new Intent(this, MainActivity.class));
+            finish();
         }
         edt_username.setText(sharedPreferences.getString("username", ""));
         edt_password.setText(sharedPreferences.getString("password", ""));
@@ -112,6 +113,7 @@ public class LoginActivity extends AppCompatActivity {
                                 editor.commit();
                             }
                             startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                            finish();
                         }else Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -126,5 +128,9 @@ public class LoginActivity extends AppCompatActivity {
     public void onCancelClick(View view) {
         edt_password.setText("");
         edt_username.setText("");
+    }
+
+    public void onExitClick(View view) {
+        finish();
     }
 }
