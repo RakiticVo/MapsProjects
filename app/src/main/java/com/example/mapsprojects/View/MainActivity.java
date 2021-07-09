@@ -390,6 +390,7 @@ public class MainActivity extends AppCompatActivity {
         editor.putBoolean("checked",false);
         editor.commit();
         startActivity(new Intent(this, LoginActivity.class));
+        this.finish();
     }
     private void addLocationIndicator(GeoCoordinates geoCoordinates,
                                       LocationIndicator.IndicatorStyle indicatorStyle) {
