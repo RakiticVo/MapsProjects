@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".HistoryActivity">
+    tools:context=".View.HistoryActivity">
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
@@ -29,9 +29,28 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
     </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
-
+        android:layout_height="wrap_content">
+        <EditText
+            android:layout_marginLeft="20dp"
+            android:id="@+id/edKetQua"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:id="@+id/btnDate"
+            android:layout_marginLeft="10dp"
+            android:text="ChỌN NGÀY"
+            android:backgroundTint="@color/blue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+        <Button
+            android:id="@+id/btnSearchHistory"
+            android:layout_marginLeft="10dp"
+            android:text="Tra lịch sử"
+            android:backgroundTint="@color/blue"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
 </LinearLayout>

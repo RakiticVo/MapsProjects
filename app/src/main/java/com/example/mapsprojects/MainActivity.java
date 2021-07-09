@@ -20,6 +20,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -28,11 +29,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mapsprojects.Model.locationModel;
+import com.example.mapsprojects.View.HistoryActivity;
 import com.example.mapsprojects.View.LoginActivity;
 import com.example.mapsprojects.ViewModel.GetLocationService;
+import com.example.mapsprojects.ViewModel.LocationDatabase;
 import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
@@ -43,7 +45,6 @@ import com.here.sdk.core.GeoPolyline;
 import com.here.sdk.core.LanguageCode;
 import com.here.sdk.core.Point2D;
 import com.here.sdk.core.errors.InstantiationErrorException;
-import com.here.sdk.gestures.TapListener;
 import com.here.sdk.mapview.LocationIndicator;
 import com.here.sdk.mapview.MapCamera;
 import com.here.sdk.mapview.MapError;
@@ -57,7 +58,6 @@ import com.here.sdk.mapview.MapView;
 import com.here.sdk.routing.AvoidanceOptions;
 import com.here.sdk.routing.CalculateRouteCallback;
 import com.here.sdk.routing.CarOptions;
-import com.here.sdk.routing.EVCarOptions;
 import com.here.sdk.routing.OptimizationMode;
 import com.here.sdk.routing.Route;
 import com.here.sdk.routing.RouteOptions;
@@ -74,10 +74,12 @@ import com.here.sdk.search.TextQuery;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Handler;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -92,14 +94,13 @@ public class MainActivity extends AppCompatActivity {
     private List<MapMarker> waypointMarkers = new ArrayList<>(); //
     private MapPolyline routePolyline;
     LocationIndicator locationIndicator = new LocationIndicator();
-    LocationCallback locationCallback;
     private android.location.Location location;
-    TextView tv_test_location;
     private MapCamera.OrientationUpdate cameraOrientation ;
     private double bearingInDegrees ;
     private double tilInDegrees ;
     private GeoCoordinates cameraCoordinates ;
     private double distanceInMeters;
+    private int count = 0 ;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -154,6 +155,8 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext() , HistoryActivity.class);
                 startActivity(intent);
+
+
             }
         });
     }
@@ -227,6 +230,15 @@ public class MainActivity extends AppCompatActivity {
                 mapView.removeLifecycleListener(locationIndicator);
                 loadMap();
                 Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
+                count ++ ;
+                if (count == 2)
+                {
+                    String locationString = location.getLatitude() + "," + location.getLongitude();
+                    addLocationRoom(locationString);
+                    count = 0;
+                    Log.e("Log", "Đã Put");
+                }
+
             }
         }
     }
@@ -368,6 +380,17 @@ public class MainActivity extends AppCompatActivity {
         mapView.addLifecycleListener(locationIndicator);
     }
 
+    private void addLocationRoom(String mlocation) {
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+        String date = df.format(Calendar.getInstance().getTime());
+        if (TextUtils.isEmpty(date) || TextUtils.isEmpty(mlocation)) {
+            return;
+        }
+
+        locationModel model = new locationModel(mlocation, date);
+        LocationDatabase.getInstance(this).locationDAO().insertUser(model);
+        Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();
+    }
     @Override
     protected void onPause() {
         super.onPause();
