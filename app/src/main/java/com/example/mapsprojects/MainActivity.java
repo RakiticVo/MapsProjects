@@ -236,7 +236,7 @@ public class MainActivity extends AppCompatActivity {
                     String locationString = location.getLatitude() + "," + location.getLongitude();
                     addLocationRoom(locationString);
                     count = 0;
-                    Log.e("Log", "Đã Put");
+
                 }
 
             }
@@ -386,7 +386,6 @@ public class MainActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(date) || TextUtils.isEmpty(mlocation)) {
             return;
         }
-
         locationModel model = new locationModel(mlocation, date);
         LocationDatabase.getInstance(this).locationDAO().insertUser(model);
         Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();

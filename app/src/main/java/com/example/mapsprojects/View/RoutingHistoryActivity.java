@@ -26,22 +26,27 @@ public class RoutingHistoryActivity extends AppCompatActivity {
     MapView mapView ;
     private MapScene mapScene;
     private MapPolyline mapPolyline ;
+    ArrayList<locationModel> model;
+    locationModel locationModel;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_routing_history);
         mapView = findViewById(R.id.mapViewHistory);
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
-        loadMap();
+
         Intent intent = getIntent();
         String day = intent.getStringExtra("data");
-        Log.e("Log", "DAY : " + day);
-        ArrayList<locationModel> model1 = (ArrayList<locationModel>) LocationDatabase.getInstance(getApplicationContext()).locationDAO().getLocationInDay(day);
-        Log.e("Log", "" + model1.size());
-        if (model1.size() > 0)
+    //    Log.e("Log", "DAY : " + day);
+        model = (ArrayList<locationModel>) LocationDatabase.getInstance(getApplicationContext()).locationDAO().getLocationInDay(day);
+        locationModel = model.get(0);
+     //   Log.e("Log", "" + model.size());
+
+        loadMap();
+        if (model.size() > 0)
         {
             mapScene = mapView.getMapScene();
-            mapPolyline = createPolyline(model1);
+            mapPolyline = createPolyline(model);
             mapScene.addMapPolyline(mapPolyline);
             Log.e("Log", "VÀO SIZE");
         }
@@ -52,10 +57,11 @@ public class RoutingHistoryActivity extends AppCompatActivity {
         mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
             @Override
             public void onLoadScene(@Nullable MapError mapError) {
+                String [] str = locationModel.getLocation().split(",");
                 if (mapError == null) {
                     double distanceInMeters = 1000 * 10;
                     mapView.getCamera().lookAt(
-                            new GeoCoordinates(10.462139, 105.643278), distanceInMeters);
+                            new GeoCoordinates(Double.parseDouble(str[0]), Double.parseDouble(str[1])), distanceInMeters);
                 } else {
                     Log.d("Log", "Loading map failed: mapError: " + mapError.name());
                 }
