@@ -1,4 +1,4 @@
-package com.example.mapsprojects.ViewModel;
+package com.example.mapsprojects.Retrofit;
 
 import com.example.mapsprojects.Model.User;
 import com.google.gson.Gson;
@@ -18,17 +18,7 @@ public interface APIService {
     // baseUrl chỉ lấy 1 phần domain của API
     String baseUrl = "http://192.168.1.37/mapsproject/";
 
-    // Khởi tạo 1 Gson
-    Gson gson = new GsonBuilder()
-            .setDateFormat("yyyy-MM-dd HH:mm:ss")
-            .create();
-
-    // Khởi tạo 1 Retrofit
-    APIService apiService = new Retrofit.Builder()
-            .baseUrl(baseUrl)
-            .addConverterFactory(GsonConverterFactory.create(gson))
-            .build()
-            .create(APIService.class);
+    APIService apiService = RetrofitClient.getClient(baseUrl).create(APIService.class);
 
     @GET("getdata.php") // tiếp tục lấy phần còn lại của domain để ghép vs baseUrl
         // để tạo ra một domain hoàn chỉnh
