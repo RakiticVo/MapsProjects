@@ -5,6 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -40,7 +41,6 @@ public class HistoryActivity extends AppCompatActivity {
                 finish();
             }
         });
-
         btnDate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -50,11 +50,15 @@ public class HistoryActivity extends AppCompatActivity {
         btnHistory.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getListLocation(edResult.getText().toString().trim());
+                if (!TextUtils.isEmpty(edResult.getText().toString().trim()))
+                {
+                    getListLocation(edResult.getText().toString().trim());
+                }
+                else {
+                    Toast.makeText(getApplicationContext(), "PLEASE CHOOSE THE DAY YOU WANT TO SEE HISTORY !!!", Toast.LENGTH_SHORT).show();
+                }
             }
         });
-
-
 
     }
     private void getListLocation(String day)
