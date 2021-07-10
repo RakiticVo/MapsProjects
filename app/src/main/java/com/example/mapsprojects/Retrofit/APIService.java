@@ -1,26 +1,16 @@
 package com.example.mapsprojects.Retrofit;
 
-import com.example.mapsprojects.Model.User;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
 import java.util.List;
 
 import retrofit2.Call;
-import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 import retrofit2.http.PUT;
 import retrofit2.http.Query;
 
 public interface APIService {
-    // baseUrl chỉ lấy 1 phần domain của API
-    String baseUrl = "http://192.168.1.37/mapsproject/";
-
-    APIService apiService = RetrofitClient.getClient(baseUrl).create(APIService.class);
-
-    @GET("getdata.php") // tiếp tục lấy phần còn lại của domain để ghép vs baseUrl
+    // url: http://192.168.1.37/mapsproject/
+    @GET("getdata.php") // phần còn lại của domain để ghép vs baseUrl
         // để tạo ra một domain hoàn chỉnh
         // http://192.168.1.37/mapsproject/getdata.php
     Call<List<User>> getData();

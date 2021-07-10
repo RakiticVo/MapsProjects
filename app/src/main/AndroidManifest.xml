@@ -26,7 +26,7 @@
             android:value="gRxcOBYq1CKzSIMyMzhbHph5r-6PMSeLRBrprtlz4ycHNGYVwOQDofz06LBxQ4SwlIAGc4zJgghfkl7UUwNRDg" />
 
         <service
-            android:name=".ViewModel.GetLocationService"
+            android:name=".Service.GetLocationService"
             android:enabled="true"
             android:exported="true" />
 

@@ -29,11 +29,12 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.mapsprojects.Model.User;
+import com.example.mapsprojects.Retrofit.APIUtils;
+import com.example.mapsprojects.Retrofit.User;
 import com.example.mapsprojects.Model.locationModel;
 import com.example.mapsprojects.R;
 import com.example.mapsprojects.Retrofit.APIService;
-import com.example.mapsprojects.ViewModel.GetLocationService;
+import com.example.mapsprojects.Service.GetLocationService;
 import com.example.mapsprojects.ViewModel.LocationDatabase;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -228,7 +229,8 @@ public class MainActivity extends AppCompatActivity {
                 final String[] userName = {""};
                 final int[] id = {0};
                 // Get data từ Server
-                APIService.apiService.getData().enqueue(new Callback<List<User>>() {
+                APIService service = APIUtils.connectRetrofit();
+                service.getData().enqueue(new Callback<List<User>>() {
                     @Override
                     public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                         List<User> api_user = response.body();
@@ -243,7 +245,7 @@ public class MainActivity extends AppCompatActivity {
                         {
                             String currentLocation = mlocation.getLatitude() + "," + mlocation.getLongitude();
                             // Update Current Location on Server
-                            APIService.apiService.updateCurrentLocation(id[0], currentLocation).enqueue(new Callback<String>() {
+                            service.updateCurrentLocation(id[0], currentLocation).enqueue(new Callback<String>() {
                                 @Override
                                 public void onResponse(Call<String> call, Response<String> response) {
                                     Log.e("TAG5", "Success" + response.body());
@@ -416,7 +418,8 @@ public class MainActivity extends AppCompatActivity {
         LocationDatabase.getInstance(this).locationDAO().insertUser(model);
         //Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();
         // Create new Location in table Route on Server
-        APIService.apiService.postLocation(userName, currentLocation, date).enqueue(new Callback<String>() {
+        APIService service = APIUtils.connectRetrofit();
+        service.postLocation(userName, currentLocation, date).enqueue(new Callback<String>() {
             @Override
             public void onResponse(Call<String> call, Response<String> response) {
                 Log.e("TAG6", "Success" + response.body());

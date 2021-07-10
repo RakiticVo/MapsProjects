@@ -1,4 +1,4 @@
-package com.example.mapsprojects.ViewModel;
+package com.example.mapsprojects.Service;
 
 import android.Manifest;
 import android.app.Service;

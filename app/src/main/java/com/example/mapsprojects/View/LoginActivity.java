@@ -15,9 +15,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.mapsprojects.Model.User;
+import com.example.mapsprojects.Retrofit.User;
 import com.example.mapsprojects.R;
 import com.example.mapsprojects.Retrofit.APIService;
+import com.example.mapsprojects.Retrofit.APIUtils;
 
 import java.util.List;
 
@@ -96,7 +97,8 @@ public class LoginActivity extends AppCompatActivity {
         String username = edt_username.getText().toString();
         String password = edt_password.getText().toString();
         // Get data từ Server
-        APIService.apiService.getData().enqueue(new Callback<List<User>>() {
+        APIService service = APIUtils.connectRetrofit();
+        service.getData().enqueue(new Callback<List<User>>() {
             @Override
             public void onResponse(Call<List<User>> call, Response<List<User>> response) {
                 List<User> api_user = response.body();
@@ -118,6 +120,7 @@ public class LoginActivity extends AppCompatActivity {
                     }
                 }
             }
+
             @Override
             public void onFailure(Call<List<User>> call, Throwable t) {
                 Log.e("TAG5", "Failed" + t.getMessage());
