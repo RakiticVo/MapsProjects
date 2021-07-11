@@ -1,4 +1,6 @@
-package com.example.mapsprojects.Retrofit;
+package com.example.mapsprojects.retrofit;
+
+import com.example.mapsprojects.model.User;
 
 import java.util.List;
 

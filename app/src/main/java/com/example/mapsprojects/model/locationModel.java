@@ -1,4 +1,4 @@
-package com.example.mapsprojects.Model;
+package com.example.mapsprojects.model;
 
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;

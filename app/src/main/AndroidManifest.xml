@@ -15,8 +15,8 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
-        <activity android:name=".View.RoutingHistoryActivity"></activity>
-        <activity android:name=".View.HistoryActivity" />
+        <activity android:name=".view.RoutingHistoryActivity"></activity>
+        <activity android:name=".view.HistoryActivity" />
 
         <meta-data
             android:name="com.here.sdk.access_key_id"
@@ -26,18 +26,18 @@
             android:value="gRxcOBYq1CKzSIMyMzhbHph5r-6PMSeLRBrprtlz4ycHNGYVwOQDofz06LBxQ4SwlIAGc4zJgghfkl7UUwNRDg" />
 
         <service
-            android:name=".Service.GetLocationService"
+            android:name=".service.GetLocationService"
             android:enabled="true"
             android:exported="true" />
 
-        <activity android:name=".View.LoginActivity">
+        <activity android:name=".view.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".View.MainActivity">
+        <activity android:name=".view.MainActivity">
 
         </activity>
     </application>

@@ -1,10 +1,10 @@
-package com.example.mapsprojects.ViewModel;
+package com.example.mapsprojects.database;
 
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
 
-import com.example.mapsprojects.Model.locationModel;
+import com.example.mapsprojects.model.locationModel;
 
 import java.util.List;
 

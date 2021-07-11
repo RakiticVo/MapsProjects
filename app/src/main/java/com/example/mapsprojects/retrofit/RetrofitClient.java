@@ -1,4 +1,4 @@
-package com.example.mapsprojects.Retrofit;
+package com.example.mapsprojects.retrofit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

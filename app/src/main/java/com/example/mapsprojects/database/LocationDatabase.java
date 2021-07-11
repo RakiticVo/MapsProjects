@@ -1,4 +1,4 @@
-package com.example.mapsprojects.ViewModel;
+package com.example.mapsprojects.database;
 
 import android.content.Context;
 
@@ -6,7 +6,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-import com.example.mapsprojects.Model.locationModel;
+import com.example.mapsprojects.model.locationModel;
 
 @Database(entities = {locationModel.class} , version = 1)
 public abstract class LocationDatabase extends RoomDatabase {

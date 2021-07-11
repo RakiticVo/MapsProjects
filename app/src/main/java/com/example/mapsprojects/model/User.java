@@ -1,4 +1,4 @@
-package com.example.mapsprojects.Retrofit;
+package com.example.mapsprojects.model;
 
 public class User {
     private int id;

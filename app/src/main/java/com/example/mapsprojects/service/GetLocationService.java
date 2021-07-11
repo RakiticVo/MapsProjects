@@ -1,4 +1,4 @@
-package com.example.mapsprojects.Service;
+package com.example.mapsprojects.service;
 
 import android.Manifest;
 import android.app.Service;
