@@ -1,4 +1,4 @@
-package com.example.mapsprojects.View;
+package com.example.mapsprojects.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -14,9 +14,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.mapsprojects.Model.locationModel;
+import com.example.mapsprojects.model.locationModel;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.ViewModel.LocationDatabase;
+import com.example.mapsprojects.database.LocationDatabase;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;

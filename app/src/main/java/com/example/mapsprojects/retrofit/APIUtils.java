@@ -1,4 +1,4 @@
-package com.example.mapsprojects.Retrofit;
+package com.example.mapsprojects.retrofit;
 
 public class APIUtils {
     public static final String baseUrl = "http://192.168.1.37/mapsproject/";

@@ -1,4 +1,4 @@
-package com.example.mapsprojects.View;
+package com.example.mapsprojects.view;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -29,13 +29,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.mapsprojects.Retrofit.APIUtils;
-import com.example.mapsprojects.Retrofit.User;
-import com.example.mapsprojects.Model.locationModel;
+import com.example.mapsprojects.retrofit.APIUtils;
+import com.example.mapsprojects.model.User;
+import com.example.mapsprojects.model.locationModel;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.Retrofit.APIService;
-import com.example.mapsprojects.Service.GetLocationService;
-import com.example.mapsprojects.ViewModel.LocationDatabase;
+import com.example.mapsprojects.retrofit.APIService;
+import com.example.mapsprojects.service.GetLocationService;
+import com.example.mapsprojects.database.LocationDatabase;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;

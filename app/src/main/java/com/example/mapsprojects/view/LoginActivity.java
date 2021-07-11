@@ -1,4 +1,4 @@
-package com.example.mapsprojects.View;
+package com.example.mapsprojects.view;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -15,10 +15,10 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.mapsprojects.Retrofit.User;
+import com.example.mapsprojects.model.User;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.Retrofit.APIService;
-import com.example.mapsprojects.Retrofit.APIUtils;
+import com.example.mapsprojects.retrofit.APIService;
+import com.example.mapsprojects.retrofit.APIUtils;
 
 import java.util.List;
 
