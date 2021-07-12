@@ -1,6 +1,6 @@
 package com.example.mapsprojects.retrofit;
 
-import com.example.mapsprojects.model.User;
+import com.example.mapsprojects.reponse.UserReponse;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public interface APIService {
     @GET("getdata.php") // phần còn lại của domain để ghép vs baseUrl
         // để tạo ra một domain hoàn chỉnh
         // http://192.168.1.37/mapsproject/getdata.php
-    Call<List<User>> getData();
+    Call<List<UserReponse>> getData();
 
     @PUT("updatedata.php") // tiếp tục lấy phần còn lại của domain để ghép vs baseUrl
         // để tạo ra một domain hoàn chỉnh
