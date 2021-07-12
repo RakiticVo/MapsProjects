@@ -12,7 +12,7 @@ import java.util.List;
 public interface LocationDAO  {
 
     @Insert
-    void insertUser(locationModel locationModel);
+    void insertLocation(locationModel locationModel);
 
     @Query("SELECT * FROM Location")
     List<locationModel> getListLocation();
