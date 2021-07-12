@@ -32,7 +32,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText edt_username, edt_password;
     CheckBox cb_remember;
     SharedPreferences sharedPreferences;
-    LoginViewModel loginViewModel;
+    private LoginViewModel loginViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -96,7 +96,7 @@ public class LoginActivity extends AppCompatActivity {
         String password = edt_password.getText().toString();
         // Get data từ Server
 //        Log.e("TAG6", "onLoginClick: " + loginViewModel.getUsers().toString());
-        loginViewModel.getUsers().observe(this, new Observer<List<UserReponse>>() {
+        loginViewModel.getUsers().observe(LoginActivity.this, new Observer<List<UserReponse>>() {
             @Override
             public void onChanged(List<UserReponse> users) {
                 if (users != null){

@@ -19,7 +19,7 @@ public class LoginViewModel extends ViewModel {
     // đây là dữ liệu mà sẽ tìm nạp không đồng bộ
     private MutableLiveData<List<UserReponse>> userList = null;
 
-    // lấy dử liệu
+    // lấy dữ liệu
     public LiveData<List<UserReponse>> getUsers(){
         if (userList == null){
             userList = new MutableLiveData<List<UserReponse>>();

@@ -6,6 +6,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
@@ -36,6 +38,8 @@ import com.example.mapsprojects.R;
 import com.example.mapsprojects.retrofit.APIService;
 import com.example.mapsprojects.service.GetLocationService;
 import com.example.mapsprojects.database.LocationDatabase;
+import com.example.mapsprojects.viewModel.LoginViewModel;
+import com.example.mapsprojects.viewModel.MainViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -107,6 +111,8 @@ public class MainActivity extends AppCompatActivity {
     private GeoCoordinates cameraCoordinates ;
     private double distanceInMeters;
     private int count = 0 ;
+    private MainViewModel mainViewModel;
+    SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -116,6 +122,9 @@ public class MainActivity extends AppCompatActivity {
         btnSearch = findViewById(R.id.btnSearch);
         edAddress = findViewById(R.id.edSearch);
         btnHistory = findViewById(R.id.btnHistory);
+        sharedPreferences = getSharedPreferences("dataLogin", MODE_PRIVATE);
+
+        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
 
@@ -226,46 +235,73 @@ public class MainActivity extends AppCompatActivity {
                 waypoints.add(new Waypoint(geoCoordinates));
                 mapView.removeLifecycleListener(locationIndicator);
                 loadMap();
-                final String[] userName = {""};
-                final int[] id = {0};
                 // Get data từ Server
-                APIService service = APIUtils.connectRetrofit();
-                service.getData().enqueue(new Callback<List<UserReponse>>() {
+                mainViewModel.getUsers().observe(MainActivity.this, new Observer<List<UserReponse>>() {
                     @Override
-                    public void onResponse(Call<List<UserReponse>> call, Response<List<UserReponse>> response) {
-                        List<UserReponse> api_user = response.body();
-                        if (api_user != null){
-                            for (int i = 0; i<api_user.size(); i++){
-                                id[0] = api_user.get(i).getId();
-                                userName[0] = api_user.get(i).getUserName();
+                    public void onChanged(List<UserReponse> users) {
+                        if (users != null) {
+                            String username = sharedPreferences.getString("username", "1");
+                            String currentLocation = mlocation.getLatitude() + "," + mlocation.getLongitude();
+                            for (int i = 0; i < users.size(); i++) {
+                                if (username.equals(users.get(i).getUserName())) {
+                                    int id = users.get(i).getId();
+                                    count++;
+                                    Log.e("TAG9", "count:" + count);
+                                    if (count == 2) {
+                                        Log.e("TAG9", "Update success" + "id: " + id + "user: " + username + "location: " + currentLocation);
+                                        mainViewModel.getResultUpdate(id, currentLocation).observe(MainActivity.this, new Observer<String>() {
+                                            @Override
+                                            public void onChanged(String s) {
+                                                Log.e("TAG9", "onChanged: " + s);
+                                            }
+                                        });
+                                        addLocationRoom(currentLocation, username);
+                                        count = 0;
+                                    }
+                                }else{
+                                    Log.e("TAG6", "Failed: " + users.size());
+                                }
                             }
                         }
-                        count ++ ;
-                        if (count == 2)
-                        {
-                            String currentLocation = mlocation.getLatitude() + "," + mlocation.getLongitude();
-                            // Update Current Location on Server
-                            service.updateCurrentLocation(id[0], currentLocation).enqueue(new Callback<String>() {
-                                @Override
-                                public void onResponse(Call<String> call, Response<String> response) {
-                                    Log.e("TAG5", "Success" + response.body());
-                                }
-
-                                @Override
-                                public void onFailure(Call<String> call, Throwable t) {
-                                    Log.e("TAG5", "Failed" + t.getMessage());
-                                }
-                            });
-                            addLocationRoom(currentLocation, userName[0]);
-                            count = 0;
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<List<UserReponse>> call, Throwable t) {
-                        Log.e("TAG5", "Failed" + t.getMessage());
                     }
                 });
+//                APIService service = APIUtils.connectRetrofit();
+//                service.getData().enqueue(new Callback<List<UserReponse>>() {
+//                    @Override
+//                    public void onResponse(Call<List<UserReponse>> call, Response<List<UserReponse>> response) {
+//                        List<UserReponse> api_user = response.body();
+//                        if (api_user != null){
+//                            for (int i = 0; i<api_user.size(); i++){
+//                                id[0] = api_user.get(i).getId();
+//                                userName[0] = api_user.get(i).getUserName();
+//                            }
+//                        }
+//                        count ++ ;
+//                        if (count == 2)
+//                        {
+//                            String currentLocation = mlocation.getLatitude() + "," + mlocation.getLongitude();
+//                            // Update Current Location on Server
+//                            service.updateCurrentLocation(id[0], currentLocation).enqueue(new Callback<String>() {
+//                                @Override
+//                                public void onResponse(Call<String> call, Response<String> response) {
+//                                    Log.e("TAG5", "Success" + response.body());
+//                                }
+//
+//                                @Override
+//                                public void onFailure(Call<String> call, Throwable t) {
+//                                    Log.e("TAG5", "Failed" + t.getMessage());
+//                                }
+//                            });
+//                            addLocationRoom(currentLocation, userName[0]);
+//                            count = 0;
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onFailure(Call<List<UserReponse>> call, Throwable t) {
+//                        Log.e("TAG5", "Failed" + t.getMessage());
+//                    }
+//                });
                 Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
 
             }
@@ -387,7 +423,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Hàm cho nút Log out
     public void onLogoutClick(View view) {
-        SharedPreferences sharedPreferences = getSharedPreferences("dataLogin", MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean("checked",false);
         editor.commit();
@@ -418,16 +453,10 @@ public class MainActivity extends AppCompatActivity {
         LocationDatabase.getInstance(this).locationDAO().insertUser(model);
         //Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();
         // Create new Location in table Route on Server
-        APIService service = APIUtils.connectRetrofit();
-        service.postLocation(userName, currentLocation, date).enqueue(new Callback<String>() {
+        mainViewModel.getResultPost(userName, currentLocation, date).observe(MainActivity.this, new Observer<String>() {
             @Override
-            public void onResponse(Call<String> call, Response<String> response) {
-                Log.e("TAG6", "Success" + response.body());
-            }
-
-            @Override
-            public void onFailure(Call<String> call, Throwable t) {
-                Log.e("TAG6", "Failed" + t.getMessage());
+            public void onChanged(String s) {
+                Log.e("TAG11", "Success: " + s );
             }
         });
     }
