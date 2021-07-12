@@ -4,7 +4,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 
 import android.Manifest;
@@ -18,17 +17,11 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.example.mapsprojects.model.User;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.retrofit.APIService;
-import com.example.mapsprojects.retrofit.APIUtils;
+import com.example.mapsprojects.reponse.UserReponse;
 import com.example.mapsprojects.viewModel.LoginViewModel;
 
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -103,9 +96,9 @@ public class LoginActivity extends AppCompatActivity {
         String password = edt_password.getText().toString();
         // Get data từ Server
 //        Log.e("TAG6", "onLoginClick: " + loginViewModel.getUsers().toString());
-        loginViewModel.getUsers().observe(this, new Observer<List<User>>() {
+        loginViewModel.getUsers().observe(this, new Observer<List<UserReponse>>() {
             @Override
-            public void onChanged(List<User> users) {
+            public void onChanged(List<UserReponse> users) {
                 if (users != null){
                     Log.e("TAG6", "onChanged: " + users.size());
                     for (int i=0 ; i<users.size(); i++) {
@@ -121,7 +114,7 @@ public class LoginActivity extends AppCompatActivity {
                             }
                             startActivity(new Intent(getApplicationContext(), MainActivity.class));
                             finish();
-                        }else Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 }else {
                     Log.e("TAG6", "Failed: " + users.size());
@@ -157,6 +150,7 @@ public class LoginActivity extends AppCompatActivity {
 //                Log.e("TAG5", "Failed" + t.getMessage());
 //            }
 //        });
+        Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
     }
 
     public void onCancelClick(View view) {

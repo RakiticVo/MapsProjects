@@ -29,8 +29,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mapsprojects.reponse.UserReponse;
 import com.example.mapsprojects.retrofit.APIUtils;
-import com.example.mapsprojects.model.User;
 import com.example.mapsprojects.model.locationModel;
 import com.example.mapsprojects.R;
 import com.example.mapsprojects.retrofit.APIService;
@@ -230,10 +230,10 @@ public class MainActivity extends AppCompatActivity {
                 final int[] id = {0};
                 // Get data từ Server
                 APIService service = APIUtils.connectRetrofit();
-                service.getData().enqueue(new Callback<List<User>>() {
+                service.getData().enqueue(new Callback<List<UserReponse>>() {
                     @Override
-                    public void onResponse(Call<List<User>> call, Response<List<User>> response) {
-                        List<User> api_user = response.body();
+                    public void onResponse(Call<List<UserReponse>> call, Response<List<UserReponse>> response) {
+                        List<UserReponse> api_user = response.body();
                         if (api_user != null){
                             for (int i = 0; i<api_user.size(); i++){
                                 id[0] = api_user.get(i).getId();
@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onFailure(Call<List<User>> call, Throwable t) {
+                    public void onFailure(Call<List<UserReponse>> call, Throwable t) {
                         Log.e("TAG5", "Failed" + t.getMessage());
                     }
                 });

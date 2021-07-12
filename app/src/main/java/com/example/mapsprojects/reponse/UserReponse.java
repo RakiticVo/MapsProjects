@@ -1,10 +1,10 @@
-package com.example.mapsprojects.model;
+package com.example.mapsprojects.reponse;
 
-public class User {
+public class UserReponse {
     private int id;
     private String userName, currentLocation;
 
-    public User(int id, String userName, String currentLocation) {
+    public UserReponse(int id, String userName, String currentLocation) {
         this.id = id;
         this.userName = userName;
         this.currentLocation = currentLocation;
