@@ -33,7 +33,6 @@ public class MainViewModel extends ViewModel {
                 public void onResponse(Call<List<UserReponse>> call, Response<List<UserReponse>> response) {
                     userList.setValue(response.body());
                 }
-
                 @Override
                 public void onFailure(Call<List<UserReponse>> call, Throwable t) {
 

@@ -7,6 +7,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 
 import android.Manifest;
@@ -38,6 +39,7 @@ import com.example.mapsprojects.R;
 import com.example.mapsprojects.retrofit.APIService;
 import com.example.mapsprojects.service.GetLocationService;
 import com.example.mapsprojects.database.LocationDatabase;
+import com.example.mapsprojects.viewModel.LocationViewModel;
 import com.example.mapsprojects.viewModel.LoginViewModel;
 import com.example.mapsprojects.viewModel.MainViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -112,6 +114,7 @@ public class MainActivity extends AppCompatActivity {
     private double distanceInMeters;
     private int count = 0 ;
     private MainViewModel mainViewModel;
+    private LocationViewModel locationViewModel ;
     SharedPreferences sharedPreferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,9 +126,8 @@ public class MainActivity extends AppCompatActivity {
         edAddress = findViewById(R.id.edSearch);
         btnHistory = findViewById(R.id.btnHistory);
         sharedPreferences = getSharedPreferences("dataLogin", MODE_PRIVATE);
-
+        locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
-
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
 
         receiver = new LocationBroadcastReceiver();
@@ -147,9 +149,7 @@ public class MainActivity extends AppCompatActivity {
             throw new RuntimeException("Initialization of SearchEngine failed: " + e.error.name());
         }
         event();
-
     }
-
     private void event()
     {
         btnSearch.setOnClickListener(new View.OnClickListener() {
@@ -168,8 +168,6 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext() , HistoryActivity.class);
                 startActivity(intent);
-
-
             }
         });
     }
@@ -197,7 +195,6 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, GetLocationService.class);
         startService(intent);
     }
-
     // Get Location
     private void getLocation() {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -220,17 +217,13 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             if (intent.getAction().equals("ACT_LOC")) {
-//                double lat = intent.getDoubleExtra("latitude", 0f);
-//                double longitude = intent.getDoubleExtra("longitude", 0f);
                 Location mlocation = intent.getParcelableExtra("lastLocation");
                 location = mlocation;
-//                tv_test_location.setText("Vị trí: " + location.getLatitude() + "--" + location.getLongitude());
                 GeoCoordinates geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
                 //   loadMap();
                 MapImage mapImage = MapImageFactory.fromResource(getApplicationContext().getResources(), R.drawable.location);
                 Anchor2D anchor2D = new Anchor2D(0.5F, 1);
                 MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
-              //  mapView.getMapScene().addMapMarker(mapMarker);
                 waypointMarkers.add(mapMarker);
                 waypoints.add(new Waypoint(geoCoordinates));
                 mapView.removeLifecycleListener(locationIndicator);
@@ -255,7 +248,7 @@ public class MainActivity extends AppCompatActivity {
                                                 Log.e("TAG9", "onChanged: " + s);
                                             }
                                         });
-                                        addLocationRoom(currentLocation, username);
+                                        addLocationServer(currentLocation, username);
                                         count = 0;
                                     }
                                 }else{
@@ -265,47 +258,26 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 });
-//                APIService service = APIUtils.connectRetrofit();
-//                service.getData().enqueue(new Callback<List<UserReponse>>() {
-//                    @Override
-//                    public void onResponse(Call<List<UserReponse>> call, Response<List<UserReponse>> response) {
-//                        List<UserReponse> api_user = response.body();
-//                        if (api_user != null){
-//                            for (int i = 0; i<api_user.size(); i++){
-//                                id[0] = api_user.get(i).getId();
-//                                userName[0] = api_user.get(i).getUserName();
-//                            }
-//                        }
-//                        count ++ ;
-//                        if (count == 2)
-//                        {
-//                            String currentLocation = mlocation.getLatitude() + "," + mlocation.getLongitude();
-//                            // Update Current Location on Server
-//                            service.updateCurrentLocation(id[0], currentLocation).enqueue(new Callback<String>() {
-//                                @Override
-//                                public void onResponse(Call<String> call, Response<String> response) {
-//                                    Log.e("TAG5", "Success" + response.body());
-//                                }
-//
-//                                @Override
-//                                public void onFailure(Call<String> call, Throwable t) {
-//                                    Log.e("TAG5", "Failed" + t.getMessage());
-//                                }
-//                            });
-//                            addLocationRoom(currentLocation, userName[0]);
-//                            count = 0;
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void onFailure(Call<List<UserReponse>> call, Throwable t) {
-//                        Log.e("TAG5", "Failed" + t.getMessage());
-//                    }
-//                });
+                // Them dữ liệu Vị trí vào Room
+                String nlocation =  mlocation.getLatitude() + "," + mlocation.getLongitude();
+                addLocationRoom(nlocation);
                 Toast.makeText(context, "Vị trí: " + location.getLatitude() + "--" + location.getLongitude(), Toast.LENGTH_SHORT).show();
-
             }
         }
+    }
+
+
+    private void addLocationRoom(String currentLocation)
+    {
+        Log.e("Log", "VAO ");
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+        String date = df.format(Calendar.getInstance().getTime());
+        if (TextUtils.isEmpty(date) || TextUtils.isEmpty(currentLocation)) {
+            return;
+        }
+        locationModel model = new locationModel(currentLocation, date);
+        Log.e("Log", "Location : " + model.getLocation());
+        locationViewModel.insertLocation(model);
     }
     private void loadMap()
     {
@@ -325,7 +297,6 @@ public class MainActivity extends AppCompatActivity {
                     if (mapError == null) {
                         double distanceInMeters = 1000;
                         mapView.getCamera().lookAt(
-                                //        new GeoCoordinates(10.46384,  105.6441), distanceInMeters);
                                 geoCoordinates,distanceInMeters);
                         addLocationIndicator(geoCoordinates,LocationIndicator.IndicatorStyle.NAVIGATION);
                     } else {
@@ -333,6 +304,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             });
+
         }catch (Exception e)
         {
             getLocation();
@@ -364,7 +336,6 @@ public class MainActivity extends AppCompatActivity {
                     linearLayout.setPadding(10,10,10,10);
                     linearLayout.addView(textView);
                     mapView.pinView(linearLayout, result.getGeoCoordinates());
-
                 }
             }
         });
@@ -395,7 +366,6 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
-
         );
 
     }
@@ -443,14 +413,16 @@ public class MainActivity extends AppCompatActivity {
         mapView.addLifecycleListener(locationIndicator);
     }
 
-    private void addLocationRoom(String currentLocation, String userName) {
+    private void addLocationServer(String currentLocation, String userName) {
+        Log.e("Log", "VAO ");
         DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
         String date = df.format(Calendar.getInstance().getTime());
         if (TextUtils.isEmpty(date) || TextUtils.isEmpty(currentLocation)) {
             return;
         }
         locationModel model = new locationModel(currentLocation, date);
-        LocationDatabase.getInstance(this).locationDAO().insertUser(model);
+        Log.e("Log", "Location : " + model.getLocation());
+        locationViewModel.insertLocation(model);
         //Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();
         // Create new Location in table Route on Server
         mainViewModel.getResultPost(userName, currentLocation, date).observe(MainActivity.this, new Observer<String>() {
@@ -460,8 +432,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-
-
     @Override
     protected void onPause() {
         super.onPause();
