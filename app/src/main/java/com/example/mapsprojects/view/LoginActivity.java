@@ -3,6 +3,9 @@ package com.example.mapsprojects.view;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProviders;
 
 import android.Manifest;
 import android.content.Intent;
@@ -19,6 +22,7 @@ import com.example.mapsprojects.model.User;
 import com.example.mapsprojects.R;
 import com.example.mapsprojects.retrofit.APIService;
 import com.example.mapsprojects.retrofit.APIUtils;
+import com.example.mapsprojects.viewModel.LoginViewModel;
 
 import java.util.List;
 
@@ -35,6 +39,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText edt_username, edt_password;
     CheckBox cb_remember;
     SharedPreferences sharedPreferences;
+    LoginViewModel loginViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
         requestPermision();
         declareView();
         sharedPreferences = getSharedPreferences("dataLogin", MODE_PRIVATE);
-
+        loginViewModel = ViewModelProviders.of(this).get(LoginViewModel.class);
         // lấy giá trị sharedPreferences và tự động đăng nhập
         if (sharedPreferences.getBoolean("checked", false) == true){
             startActivity(new Intent(this, MainActivity.class));
@@ -97,14 +102,14 @@ public class LoginActivity extends AppCompatActivity {
         String username = edt_username.getText().toString();
         String password = edt_password.getText().toString();
         // Get data từ Server
-        APIService service = APIUtils.connectRetrofit();
-        service.getData().enqueue(new Callback<List<User>>() {
+//        Log.e("TAG6", "onLoginClick: " + loginViewModel.getUsers().toString());
+        loginViewModel.getUsers().observe(this, new Observer<List<User>>() {
             @Override
-            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
-                List<User> api_user = response.body();
-                if (api_user != null) {
-                    for (int i = 0; i < api_user.size(); i++) {
-                        if (username.equals(api_user.get(i).getUserName())){
+            public void onChanged(List<User> users) {
+                if (users != null){
+                    Log.e("TAG6", "onChanged: " + users.size());
+                    for (int i=0 ; i<users.size(); i++) {
+                        if (username.equals(users.get(i).getUserName())) {
                             Toast.makeText(getApplicationContext(), "Log in success", Toast.LENGTH_SHORT).show();
                             if (cb_remember.isChecked()){
                                 // Nếu có check thì lưu tài khoản và mật khẩu
@@ -118,14 +123,40 @@ public class LoginActivity extends AppCompatActivity {
                             finish();
                         }else Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
                     }
+                }else {
+                    Log.e("TAG6", "Failed: " + users.size());
                 }
             }
-
-            @Override
-            public void onFailure(Call<List<User>> call, Throwable t) {
-                Log.e("TAG5", "Failed" + t.getMessage());
-            }
         });
+//        APIService service = APIUtils.connectRetrofit();
+//        service.getData().enqueue(new Callback<List<User>>() {
+//            @Override
+//            public void onResponse(Call<List<User>> call, Response<List<User>> response) {
+//                List<User> api_user = response.body();
+//                if (api_user != null) {
+//                    for (int i = 0; i < api_user.size(); i++) {
+//                        if (username.equals(api_user.get(i).getUserName())){
+//                            Toast.makeText(getApplicationContext(), "Log in success", Toast.LENGTH_SHORT).show();
+//                            if (cb_remember.isChecked()){
+//                                // Nếu có check thì lưu tài khoản và mật khẩu
+//                                SharedPreferences.Editor editor = sharedPreferences.edit();
+//                                editor.putString("username", username);
+//                                editor.putString("password", password);
+//                                editor.putBoolean("checked", true);
+//                                editor.commit();
+//                            }
+//                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+//                            finish();
+//                        }else Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
+//                    }
+//                }
+//            }
+//
+//            @Override
+//            public void onFailure(Call<List<User>> call, Throwable t) {
+//                Log.e("TAG5", "Failed" + t.getMessage());
+//            }
+//        });
     }
 
     public void onCancelClick(View view) {
