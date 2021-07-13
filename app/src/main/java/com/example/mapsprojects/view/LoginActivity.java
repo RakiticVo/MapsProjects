@@ -21,6 +21,7 @@ import com.example.mapsprojects.R;
 import com.example.mapsprojects.reponse.UserReponse;
 import com.example.mapsprojects.viewModel.APIRetrofitViewModel;
 import com.example.mapsprojects.viewModel.ServiceViewModel;
+import com.example.mapsprojects.viewModel.UserViewModel;
 
 import java.util.List;
 
@@ -34,6 +35,7 @@ public class LoginActivity extends AppCompatActivity {
     CheckBox cb_remember;
     SharedPreferences sharedPreferences;
     private APIRetrofitViewModel apiRetrofitViewModel;
+    private UserViewModel userViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +45,7 @@ public class LoginActivity extends AppCompatActivity {
         declareView();
         sharedPreferences = getSharedPreferences("dataLogin", MODE_PRIVATE);
         apiRetrofitViewModel = ViewModelProviders.of(this).get(APIRetrofitViewModel.class);
+        userViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
         // lấy giá trị sharedPreferences và tự động đăng nhập
         if (sharedPreferences.getBoolean("checked", false) == true){
             startActivity(new Intent(this, MainActivity.class));
@@ -95,30 +98,32 @@ public class LoginActivity extends AppCompatActivity {
     public void onLoginClick(View view) {
         String username = edt_username.getText().toString();
         String password = edt_password.getText().toString();
+        Boolean cb_checked = cb_remember.isChecked();
         // Get data từ Server
 //        Log.e("TAG6", "onLoginClick: " + loginViewModel.getUsers().toString());
         apiRetrofitViewModel.getUsers().observe(LoginActivity.this, new Observer<List<UserReponse>>() {
             @Override
             public void onChanged(List<UserReponse> users) {
                 if (users != null){
-                    Log.e("TAG6", "onChanged: " + users.size());
-                    for (int i=0 ; i<users.size(); i++) {
-                        if (username.equals(users.get(i).getUserName())) {
-                            Toast.makeText(getApplicationContext(), "Log in success", Toast.LENGTH_SHORT).show();
-                            if (cb_remember.isChecked()){
-                                // Nếu có check thì lưu tài khoản và mật khẩu
-                                SharedPreferences.Editor editor = sharedPreferences.edit();
-                                editor.putString("username", username);
-                                editor.putString("password", password);
-                                editor.putBoolean("checked", true);
-                                editor.commit();
-                            }
-                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
-                            finish();
-                        }else {
-                            Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
-                        }
-                    }
+                    userViewModel.checkUser(users, username, password, LoginActivity.this, cb_checked);
+//                    Log.e("TAG6", "onChanged: " + users.size());
+//                    for (int i=0 ; i<users.size(); i++) {
+//                        if (username.equals(users.get(i).getUserName())) {
+//                            Toast.makeText(getApplicationContext(), "Log in success", Toast.LENGTH_SHORT).show();
+//                            if (cb_remember.isChecked()){
+//                                // Nếu có check thì lưu tài khoản và mật khẩu
+//                                SharedPreferences.Editor editor = sharedPreferences.edit();
+//                                editor.putString("username", username);
+//                                editor.putString("password", password);
+//                                editor.putBoolean("checked", true);
+//                                editor.commit();
+//                            }
+//                            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+//                            finish();
+//                        }else {
+//                            Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
+//                        }
+//                    }
                 }else {
                     Log.e("TAG6", "Failed: " + users.size());
                 }
