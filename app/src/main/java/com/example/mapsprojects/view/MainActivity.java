@@ -1,8 +1,6 @@
 package com.example.mapsprojects.view;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -15,7 +13,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -28,8 +25,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mapsprojects.model.Map_Model;
@@ -38,53 +33,25 @@ import com.example.mapsprojects.model.Location_Model;
 import com.example.mapsprojects.R;
 import com.example.mapsprojects.service.GetLocationService;
 import com.example.mapsprojects.viewModel.LocationViewModel;
-import com.example.mapsprojects.viewModel.MainViewModel;
+import com.example.mapsprojects.viewModel.APIRetrofitViewModel;
 import com.example.mapsprojects.viewModel.MapViewModel;
+import com.example.mapsprojects.viewModel.ServiceViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.here.sdk.core.Anchor2D;
-import com.here.sdk.core.Color;
 import com.here.sdk.core.GeoCoordinates;
-import com.here.sdk.core.GeoPolyline;
-import com.here.sdk.core.LanguageCode;
-import com.here.sdk.core.Point2D;
-import com.here.sdk.core.errors.InstantiationErrorException;
-import com.here.sdk.mapview.LocationIndicator;
-import com.here.sdk.mapview.MapCamera;
-import com.here.sdk.mapview.MapError;
 import com.here.sdk.mapview.MapImage;
 import com.here.sdk.mapview.MapImageFactory;
 import com.here.sdk.mapview.MapMarker;
-import com.here.sdk.mapview.MapPolyline;
-import com.here.sdk.mapview.MapScene;
-import com.here.sdk.mapview.MapScheme;
 import com.here.sdk.mapview.MapView;
-import com.here.sdk.routing.AvoidanceOptions;
-import com.here.sdk.routing.CalculateRouteCallback;
-import com.here.sdk.routing.CarOptions;
-import com.here.sdk.routing.OptimizationMode;
-import com.here.sdk.routing.Route;
-import com.here.sdk.routing.RouteOptions;
-import com.here.sdk.routing.RouteTextOptions;
-import com.here.sdk.routing.RoutingEngine;
-import com.here.sdk.routing.RoutingError;
-import com.here.sdk.routing.Waypoint;
-import com.here.sdk.search.Place;
-import com.here.sdk.search.SearchCallback;
-import com.here.sdk.search.SearchEngine;
-import com.here.sdk.search.SearchError;
-import com.here.sdk.search.SearchOptions;
-import com.here.sdk.search.TextQuery;
 
 import org.jetbrains.annotations.NotNull;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -97,7 +64,8 @@ public class MainActivity extends AppCompatActivity {
     FusedLocationProviderClient fusedLocationProviderClient;
     private android.location.Location location;
     private int count = 0 ;
-    private MainViewModel mainViewModel;
+    private APIRetrofitViewModel apiRetrofitViewModel;
+    private ServiceViewModel serviceViewModel;
     private LocationViewModel locationViewModel ;
     SharedPreferences sharedPreferences;
     @Override
@@ -111,12 +79,13 @@ public class MainActivity extends AppCompatActivity {
         btnHistory = findViewById(R.id.btnHistory);
         sharedPreferences = getSharedPreferences("dataLogin", MODE_PRIVATE);
         locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
-        mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+        apiRetrofitViewModel = ViewModelProviders.of(this).get(APIRetrofitViewModel.class);
+        serviceViewModel = ViewModelProviders.of(this).get(ServiceViewModel.class);
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
         mapViewModel =  new ViewModelProvider(this).get(MapViewModel.class);
         mapViewModel.init(mapView, getApplicationContext());
         receiver = new LocationBroadcastReceiver();
-        mainViewModel.startGetLocationService(this, receiver);
+        serviceViewModel.startGetLocationService(this, receiver);
         // Yêu cầu bật Vị trí
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -203,7 +172,7 @@ public class MainActivity extends AppCompatActivity {
                 MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
                 mapViewModel.loadMap(new Map_Model(location.getLatitude(), location.getLongitude()));
                 // Get data từ Server
-                mainViewModel.getUsers().observe(MainActivity.this, new Observer<List<UserReponse>>() {
+                apiRetrofitViewModel.getUsers().observe(MainActivity.this, new Observer<List<UserReponse>>() {
                     @Override
                     public void onChanged(List<UserReponse> users) {
                         if (users != null) {
@@ -216,7 +185,7 @@ public class MainActivity extends AppCompatActivity {
                                     Log.e("TAG9", "count:" + count);
                                     if (count == 2) {
                                         Log.e("TAG9", "Update success" + "id: " + id + "user: " + username + "location: " + currentLocation);
-                                        mainViewModel.getResultUpdate(id, currentLocation).observe(MainActivity.this, new Observer<String>() {
+                                        apiRetrofitViewModel.getResultUpdate(id, currentLocation).observe(MainActivity.this, new Observer<String>() {
                                             @Override
                                             public void onChanged(String s) {
                                                 Log.e("TAG9", "onChanged: " + s);
@@ -274,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
         locationViewModel.insertLocation(model);
         //Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();
         // Create new Location in table Route on Server
-        mainViewModel.getResultPost(userName, currentLocation, date).observe(MainActivity.this, new Observer<String>() {
+        apiRetrofitViewModel.getResultPost(userName, currentLocation, date).observe(MainActivity.this, new Observer<String>() {
             @Override
             public void onChanged(String s) {
                 Log.e("TAG11", "Success: " + s );
@@ -291,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 //        startLocService();
-        mainViewModel.startGetLocationService(this, receiver);
+        serviceViewModel.startGetLocationService(this, receiver);
     }
 
     @Override
