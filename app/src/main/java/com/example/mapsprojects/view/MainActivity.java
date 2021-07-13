@@ -116,6 +116,7 @@ public class MainActivity extends AppCompatActivity {
         mapViewModel =  new ViewModelProvider(this).get(MapViewModel.class);
         mapViewModel.init(mapView, getApplicationContext());
         receiver = new LocationBroadcastReceiver();
+        mainViewModel.startGetLocationService(this, receiver);
         // Yêu cầu bật Vị trí
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -177,15 +178,15 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    // Hàm gọi Service
-    void startLocService() {
-        IntentFilter filter = new IntentFilter("ACT_LOC");
-        // Đăng ký BR
-        registerReceiver(receiver, filter);
-//        Toast.makeText(this, "registerReceiver success", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(MainActivity.this, GetLocationService.class);
-        startService(intent);
-    }
+//    // Hàm gọi Service
+//    void startLocService() {
+//        IntentFilter filter = new IntentFilter("ACT_LOC");
+//        // Đăng ký BR
+//        registerReceiver(receiver, filter);
+////        Toast.makeText(this, "registerReceiver success", Toast.LENGTH_SHORT).show();
+//        Intent intent = new Intent(MainActivity.this, GetLocationService.class);
+//        startService(intent);
+//    }
 
 
     // Hàm tạo ra một BR
@@ -289,7 +290,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        startLocService();
+//        startLocService();
+        mainViewModel.startGetLocationService(this, receiver);
     }
 
     @Override

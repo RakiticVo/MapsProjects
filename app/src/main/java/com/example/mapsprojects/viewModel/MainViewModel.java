@@ -1,5 +1,9 @@
 package com.example.mapsprojects.viewModel;
 
+import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.util.Log;
 
 import androidx.lifecycle.LiveData;
@@ -9,6 +13,7 @@ import androidx.lifecycle.ViewModel;
 import com.example.mapsprojects.reponse.UserReponse;
 import com.example.mapsprojects.retrofit.APIService;
 import com.example.mapsprojects.retrofit.APIUtils;
+import com.example.mapsprojects.service.GetLocationService;
 
 import java.util.List;
 
@@ -77,5 +82,14 @@ public class MainViewModel extends ViewModel {
             }
         });
         return  stringResultPost;
+    }
+
+    public void startGetLocationService(Activity activity, BroadcastReceiver receiver){
+        IntentFilter filter = new IntentFilter("ACT_LOC");
+        // Đăng ký BR
+        activity.registerReceiver(receiver, filter);
+//        Toast.makeText(this, "registerReceiver success", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(activity, GetLocationService.class);
+        activity.startService(intent);
     }
 }
