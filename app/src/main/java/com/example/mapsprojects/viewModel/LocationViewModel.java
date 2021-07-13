@@ -31,5 +31,4 @@ public class LocationViewModel extends AndroidViewModel {
     {
         return (LiveData<List<locationModel>>) database.locationDAO().getListLocation();
     }
-
 }

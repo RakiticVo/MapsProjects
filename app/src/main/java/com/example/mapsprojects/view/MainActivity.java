@@ -131,6 +131,7 @@ public class MainActivity extends AppCompatActivity {
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
 
         receiver = new LocationBroadcastReceiver();
+        mainViewModel.startGetLocationService(this, receiver);
         // Yêu cầu bật Vị trí
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -171,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
     // Hàm chuyển đến cài đặt Vị trí
     private void buildAlertMessageNoLocation() {
         new AlertDialog.Builder(this)
@@ -187,14 +189,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // Hàm gọi Service
-    void startLocService() {
-        IntentFilter filter = new IntentFilter("ACT_LOC");
-        // Đăng ký BR
-        registerReceiver(receiver, filter);
-//        Toast.makeText(this, "registerReceiver success", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(MainActivity.this, GetLocationService.class);
-        startService(intent);
-    }
+//    void startLocService() {
+//        IntentFilter filter = new IntentFilter("ACT_LOC");
+//        // Đăng ký BR
+//        registerReceiver(receiver, filter);
+////        Toast.makeText(this, "registerReceiver success", Toast.LENGTH_SHORT).show();
+//        Intent intent = new Intent(MainActivity.this, GetLocationService.class);
+//        startService(intent);
+//    }
     // Get Location
     private void getLocation() {
             if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -441,7 +443,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        startLocService();
+//        startLocService();
+        mainViewModel.startGetLocationService(this, receiver);
     }
 
     @Override
