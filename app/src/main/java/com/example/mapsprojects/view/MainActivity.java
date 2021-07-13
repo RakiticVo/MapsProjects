@@ -32,16 +32,14 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.mapsprojects.model.Map_Model;
 import com.example.mapsprojects.reponse.UserReponse;
-import com.example.mapsprojects.retrofit.APIUtils;
-import com.example.mapsprojects.model.locationModel;
+import com.example.mapsprojects.model.Location_Model;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.retrofit.APIService;
 import com.example.mapsprojects.service.GetLocationService;
-import com.example.mapsprojects.database.LocationDatabase;
 import com.example.mapsprojects.viewModel.LocationViewModel;
-import com.example.mapsprojects.viewModel.LoginViewModel;
 import com.example.mapsprojects.viewModel.MainViewModel;
+import com.example.mapsprojects.viewModel.MapViewModel;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -89,29 +87,15 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
 public class MainActivity extends AppCompatActivity {
 
     LocationBroadcastReceiver receiver;
     private MapView mapView;
     private Button btnSearch , btnHistory;
     private EditText edAddress;
-    private SearchEngine searchEngine;
+    MapViewModel mapViewModel ;
     FusedLocationProviderClient fusedLocationProviderClient;
-    private RoutingEngine routingEngine; // công cụ định tuyến
-    private List<Waypoint> waypoints = new ArrayList<>(); // Danh sách các điểm tham chiếu
-    private List<MapMarker> waypointMarkers = new ArrayList<>(); //
-    private MapPolyline routePolyline;
-    LocationIndicator locationIndicator = new LocationIndicator();
     private android.location.Location location;
-    private MapCamera.OrientationUpdate cameraOrientation ;
-    private double bearingInDegrees ;
-    private double tilInDegrees ;
-    private GeoCoordinates cameraCoordinates ;
-    private double distanceInMeters;
     private int count = 0 ;
     private MainViewModel mainViewModel;
     private LocationViewModel locationViewModel ;
@@ -129,7 +113,8 @@ public class MainActivity extends AppCompatActivity {
         locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
         mainViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
         mapView.onCreate(savedInstanceState); // Phai co create neu khong bi loi
-
+        mapViewModel =  new ViewModelProvider(this).get(MapViewModel.class);
+        mapViewModel.init(mapView, getApplicationContext());
         receiver = new LocationBroadcastReceiver();
         // Yêu cầu bật Vị trí
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -138,17 +123,24 @@ public class MainActivity extends AppCompatActivity {
                 buildAlertMessageNoLocation();
             }
         }
-        try {
-            routingEngine = new RoutingEngine();
-        } catch (InstantiationErrorException e) {
-            e.printStackTrace();
-        }
-        try {
-            searchEngine = new SearchEngine();
-        } catch (InstantiationErrorException e) {
-            throw new RuntimeException("Initialization of SearchEngine failed: " + e.error.name());
-        }
+        getLocation();
+
         event();
+    }
+    private void getLocation() {
+        if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
+        fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
+            @Override
+            public void onComplete(@NonNull @NotNull Task<Location> task) {
+                Location mlocation = task.getResult();
+                location = mlocation;
+                mapViewModel.loadMap(new Map_Model(mlocation.getLatitude(), mlocation.getLongitude()));
+                Log.e("Log", "Location : Latitude  " + location.getLatitude() + " | Longitude : " + location.getLongitude());
+            }
+        });
     }
     private void event()
     {
@@ -158,9 +150,8 @@ public class MainActivity extends AppCompatActivity {
                 String address = edAddress.getText().toString();
                 if (!address.equals(""))
                 {
-                    searchLocation(v, address);
+                    mapViewModel.searchLocation(v , address);
                 }
-
             }
         });
         btnHistory.setOnClickListener(new View.OnClickListener() {
@@ -195,22 +186,7 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, GetLocationService.class);
         startService(intent);
     }
-    // Get Location
-    private void getLocation() {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
-            }
-            fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-            fusedLocationProviderClient.getLastLocation().addOnCompleteListener(new OnCompleteListener<Location>() {
-                @Override
-                public void onComplete(@NonNull @NotNull Task<Location> task) {
-                    Location mlocation = task.getResult();
-                    location = mlocation;
-                    loadMap();
-                    Log.e("Log", "Location : Latitude  " + location.getLatitude() + " | Longitude : " + location.getLongitude());
-                }
-            });
-    }
+
 
     // Hàm tạo ra một BR
     public class LocationBroadcastReceiver extends BroadcastReceiver {
@@ -224,10 +200,7 @@ public class MainActivity extends AppCompatActivity {
                 MapImage mapImage = MapImageFactory.fromResource(getApplicationContext().getResources(), R.drawable.location);
                 Anchor2D anchor2D = new Anchor2D(0.5F, 1);
                 MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
-                waypointMarkers.add(mapMarker);
-                waypoints.add(new Waypoint(geoCoordinates));
-                mapView.removeLifecycleListener(locationIndicator);
-                loadMap();
+                mapViewModel.loadMap(new Map_Model(location.getLatitude(), location.getLongitude()));
                 // Get data từ Server
                 mainViewModel.getUsers().observe(MainActivity.this, new Observer<List<UserReponse>>() {
                     @Override
@@ -265,8 +238,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
-
     private void addLocationRoom(String currentLocation)
     {
         Log.e("Log", "VAO ");
@@ -275,120 +246,9 @@ public class MainActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(date) || TextUtils.isEmpty(currentLocation)) {
             return;
         }
-        locationModel model = new locationModel(currentLocation, date);
+        Location_Model model = new Location_Model(currentLocation, date);
         Log.e("Log", "Location : " + model.getLocation());
         locationViewModel.insertLocation(model);
-    }
-    private void loadMap()
-    {
-     //   GeoCoordinates geoCoordinates = new GeoCoordinates(10.46171 , 105.64354);
-        GeoCoordinates geoCoordinates;
-        try {
-            bearingInDegrees = -360 ;
-            tilInDegrees = 0 ;
-            distanceInMeters = 1000;
-            cameraOrientation = new MapCamera.OrientationUpdate(bearingInDegrees, tilInDegrees);
-            cameraCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
-            mapView.getCamera().lookAt(cameraCoordinates, cameraOrientation, distanceInMeters);
-             geoCoordinates = new GeoCoordinates(location.getLatitude() , location.getLongitude());
-            mapView.getMapScene().loadScene(MapScheme.NORMAL_DAY, new MapScene.LoadSceneCallback() {
-                @Override
-                public void onLoadScene(@Nullable MapError mapError) {
-                    if (mapError == null) {
-                        double distanceInMeters = 1000;
-                        mapView.getCamera().lookAt(
-                                geoCoordinates,distanceInMeters);
-                        addLocationIndicator(geoCoordinates,LocationIndicator.IndicatorStyle.NAVIGATION);
-                    } else {
-                        Log.d("Log", "Loading map failed: mapError: " + mapError.name());
-                    }
-                }
-            });
-
-        }catch (Exception e)
-        {
-            getLocation();
-        }
-    }
-    private void searchLocation(View view , String address)
-    {
-        int maxItems = 30;
-        SearchOptions searchOptions = new SearchOptions(LanguageCode.VI_VN, maxItems);
-        TextQuery query = new TextQuery(address, getScreenCenter());
-        searchEngine.search(query, searchOptions, new SearchCallback() {
-            @Override
-            public void onSearchCompleted(@Nullable SearchError searchError, @Nullable List<Place> list) {
-                for (Place result : list)
-                {
-                    GeoCoordinates geoCoordinates = result.getGeoCoordinates();
-                    MapImage mapImage = MapImageFactory.fromResource(getApplicationContext().getResources(), R.drawable.location);
-                    Anchor2D anchor2D = new Anchor2D(0.5F, 1);
-                    MapMarker mapMarker = new MapMarker(geoCoordinates, mapImage, anchor2D);
-                    mapView.getMapScene().addMapMarker(mapMarker);
-                    waypointMarkers.add(mapMarker);
-                    waypoints.add(new Waypoint(geoCoordinates));
-                    calculateRoute();
-                    TextView textView = new TextView(getApplicationContext());
-                    textView.setTextColor(android.graphics.Color.parseColor("#FFFFFF"));
-                    textView.setText(result.getTitle());
-                    LinearLayout linearLayout = new LinearLayout(getApplicationContext());
-                    linearLayout.setBackgroundResource(R.color.blue);
-                    linearLayout.setPadding(10,10,10,10);
-                    linearLayout.addView(textView);
-                    mapView.pinView(linearLayout, result.getGeoCoordinates());
-                }
-            }
-        });
-    }
-    // Tính quản dường
-    public void calculateRoute()
-    {
-        Log.e("Log", "VAO : " + waypointMarkers.size() + " | " + waypoints.size());
-        RouteOptions routeOptions = new RouteOptions();
-        routeOptions.alternatives = 3 ;
-        routeOptions.optimizationMode = OptimizationMode.FASTEST;
-        CarOptions options = new CarOptions(routeOptions, new RouteTextOptions(), new AvoidanceOptions());
-        routingEngine.calculateRoute(
-                waypoints,
-                options,
-                new CalculateRouteCallback() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void onRouteCalculated(@Nullable RoutingError routingError, @Nullable  List<Route> list) {
-                        if (routingError == null)
-                        {
-                            Route route = list.get(0);
-                            Log.e("Log", "VAO on RouteCalculated : " + list);
-                            drawRoute(route);
-                        }
-                        else {
-                            Toast.makeText(getApplicationContext(), "Error Route !!!" , Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-        );
-
-    }
-    private GeoCoordinates getScreenCenter()
-    {
-        int screenWidthInPixel = mapView.getWidth();
-        int screenHeightInPixel = mapView.getHeight();
-        Point2D point = new Point2D(screenWidthInPixel * 0.5 , screenHeightInPixel * 0.5);
-        return mapView.viewToGeoCoordinates(point);
-    }
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void drawRoute(Route route) {
-        GeoPolyline routeGeoPolyline ;
-        Log.e("Log", "VAO DRAWROUTE");
-        try {
-            routeGeoPolyline = new GeoPolyline(route.getPolyline());
-        } catch (InstantiationErrorException e) {
-            return;
-        }
-        Color fillColor = Color.valueOf(0, 0.56f, 0.54f, 0.63f);
-        routePolyline = new MapPolyline(routeGeoPolyline , 20 ,fillColor);
-        mapView.getMapScene().addMapPolyline(routePolyline);
-        Toast.makeText(getApplicationContext(), "Your destination is " + route.getLengthInMeters() + " meters away !!! ", Toast.LENGTH_LONG).show();
     }
 
     // Hàm cho nút Log out
@@ -399,19 +259,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(new Intent(this, LoginActivity.class));
         this.finish();
     }
-    private void addLocationIndicator(GeoCoordinates geoCoordinates,
-                                      LocationIndicator.IndicatorStyle indicatorStyle) {
 
-        locationIndicator.setLocationIndicatorStyle(indicatorStyle);
-        com.here.sdk.core.Location location = new com.here.sdk.core.Location.Builder()
-                .setCoordinates(geoCoordinates)
-                .setTimestamp(new Date())
-                .build();
-        locationIndicator.updateLocation(location);
-        // A LocationIndicator listens to the lifecycle of the map view,
-        // therefore, for example, it will get destroyed when the map view gets destroyed.
-        mapView.addLifecycleListener(locationIndicator);
-    }
 
     private void addLocationServer(String currentLocation, String userName) {
         Log.e("Log", "VAO ");
@@ -420,7 +268,7 @@ public class MainActivity extends AppCompatActivity {
         if (TextUtils.isEmpty(date) || TextUtils.isEmpty(currentLocation)) {
             return;
         }
-        locationModel model = new locationModel(currentLocation, date);
+        Location_Model model = new Location_Model(currentLocation, date);
         Log.e("Log", "Location : " + model.getLocation());
         locationViewModel.insertLocation(model);
         //Toast.makeText(this, "Add Location successfully", Toast.LENGTH_SHORT).show();

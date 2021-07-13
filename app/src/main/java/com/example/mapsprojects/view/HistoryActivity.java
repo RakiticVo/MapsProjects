@@ -1,6 +1,7 @@
 package com.example.mapsprojects.view;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
@@ -14,19 +15,21 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.example.mapsprojects.model.locationModel;
+import com.example.mapsprojects.model.Location_Model;
 import com.example.mapsprojects.R;
-import com.example.mapsprojects.database.LocationDatabase;
+import com.example.mapsprojects.viewModel.LocationViewModel;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class HistoryActivity extends AppCompatActivity {
     ImageView imgBack ;
     EditText edResult;
     Button btnDate , btnHistory;
+    LocationViewModel locationViewModel ;
+    List<Location_Model> model;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +38,8 @@ public class HistoryActivity extends AppCompatActivity {
         edResult = findViewById(R.id.edKetQua);
         btnDate = findViewById(R.id.btnDate);
         btnHistory = findViewById(R.id.btnSearchHistory);
+        locationViewModel = new ViewModelProvider(this).get(LocationViewModel.class);
+        model = locationViewModel.getListLocationViewModel();
         imgBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -52,6 +57,7 @@ public class HistoryActivity extends AppCompatActivity {
             public void onClick(View v) {
                 if (!TextUtils.isEmpty(edResult.getText().toString().trim()))
                 {
+
                     getListLocation(edResult.getText().toString().trim());
                 }
                 else {
@@ -63,8 +69,9 @@ public class HistoryActivity extends AppCompatActivity {
     }
     private void getListLocation(String day)
     {
-        ArrayList<locationModel> model1 = (ArrayList<locationModel>) LocationDatabase.getInstance(getApplicationContext()).locationDAO().getListLocation();
-        if (model1.size() > 0 )
+        Log.e("Log", "List : " + model.size());
+        List<Location_Model> list = locationViewModel.getListLocationInDay(day);
+        if (list.size() > 1 )
         {
             Intent intent = new Intent(HistoryActivity.this , RoutingHistoryActivity.class);
             intent.putExtra("data" , day);
