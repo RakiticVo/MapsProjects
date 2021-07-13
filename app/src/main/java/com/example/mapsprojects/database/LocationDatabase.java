@@ -6,9 +6,9 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-import com.example.mapsprojects.model.locationModel;
+import com.example.mapsprojects.model.Location_Model;
 
-@Database(entities = {locationModel.class} , version = 1)
+@Database(entities = {Location_Model.class} , version = 1)
 public abstract class LocationDatabase extends RoomDatabase {
       private static final String DATABASE_NAME = "location.db";
       private static LocationDatabase instances ;

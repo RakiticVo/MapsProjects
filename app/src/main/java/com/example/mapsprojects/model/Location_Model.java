@@ -4,13 +4,13 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "Location")
-public class locationModel {
+public class Location_Model {
 
     @PrimaryKey(autoGenerate = true)
     private int id;
     private String location;
     private String date ;
-    public locationModel(String location, String date) {
+    public Location_Model(String location, String date) {
         this.location = location;
         this.date = date ;
     }

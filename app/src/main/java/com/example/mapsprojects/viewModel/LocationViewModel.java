@@ -8,7 +8,7 @@ import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 
 import com.example.mapsprojects.database.LocationDatabase;
-import com.example.mapsprojects.model.locationModel;
+import com.example.mapsprojects.model.Location_Model;
 
 import java.util.List;
 
@@ -16,20 +16,24 @@ import java.util.List;
 public class LocationViewModel extends AndroidViewModel {
     private static final String TAG = "Log";
     private LocationDatabase database ;
-    private LiveData<List<locationModel>> listLocation = null;
+    private LiveData<List<Location_Model>> listLocation = null;
     public LocationViewModel(@NonNull  Application application)
     {
         super(application);
         database = LocationDatabase.getInstance(application);
     }
-    public void insertLocation (locationModel location)
+    public void insertLocation (Location_Model location)
     {
         database.locationDAO().insertLocation(location);
         Log.e(TAG, "ADD SUCCESS");
     }
-    public LiveData<List<locationModel>> getListLocationViewModel()
+    public List<Location_Model> getListLocationViewModel()
     {
-        return (LiveData<List<locationModel>>) database.locationDAO().getListLocation();
+        return  database.locationDAO().getListLocation();
+    }
+    public List<Location_Model> getListLocationInDay(String day)
+    {
+        return database.locationDAO().getLocationInDay(day);
     }
 
 }
