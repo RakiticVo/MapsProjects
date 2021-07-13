@@ -19,7 +19,8 @@ import android.widget.Toast;
 
 import com.example.mapsprojects.R;
 import com.example.mapsprojects.reponse.UserReponse;
-import com.example.mapsprojects.viewModel.LoginViewModel;
+import com.example.mapsprojects.viewModel.APIRetrofitViewModel;
+import com.example.mapsprojects.viewModel.ServiceViewModel;
 
 import java.util.List;
 
@@ -32,7 +33,7 @@ public class LoginActivity extends AppCompatActivity {
     EditText edt_username, edt_password;
     CheckBox cb_remember;
     SharedPreferences sharedPreferences;
-    private LoginViewModel loginViewModel;
+    private APIRetrofitViewModel apiRetrofitViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,7 +42,7 @@ public class LoginActivity extends AppCompatActivity {
         requestPermision();
         declareView();
         sharedPreferences = getSharedPreferences("dataLogin", MODE_PRIVATE);
-        loginViewModel = ViewModelProviders.of(this).get(LoginViewModel.class);
+        apiRetrofitViewModel = ViewModelProviders.of(this).get(APIRetrofitViewModel.class);
         // lấy giá trị sharedPreferences và tự động đăng nhập
         if (sharedPreferences.getBoolean("checked", false) == true){
             startActivity(new Intent(this, MainActivity.class));
@@ -96,7 +97,7 @@ public class LoginActivity extends AppCompatActivity {
         String password = edt_password.getText().toString();
         // Get data từ Server
 //        Log.e("TAG6", "onLoginClick: " + loginViewModel.getUsers().toString());
-        loginViewModel.getUsers().observe(LoginActivity.this, new Observer<List<UserReponse>>() {
+        apiRetrofitViewModel.getUsers().observe(LoginActivity.this, new Observer<List<UserReponse>>() {
             @Override
             public void onChanged(List<UserReponse> users) {
                 if (users != null){
@@ -114,6 +115,8 @@ public class LoginActivity extends AppCompatActivity {
                             }
                             startActivity(new Intent(getApplicationContext(), MainActivity.class));
                             finish();
+                        }else {
+                            Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }else {
@@ -150,7 +153,6 @@ public class LoginActivity extends AppCompatActivity {
 //                Log.e("TAG5", "Failed" + t.getMessage());
 //            }
 //        });
-        Toast.makeText(getApplicationContext(), "Log in fail", Toast.LENGTH_SHORT).show();
     }
 
     public void onCancelClick(View view) {

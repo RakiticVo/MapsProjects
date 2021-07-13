@@ -21,7 +21,7 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainViewModel extends ViewModel {
+public class APIRetrofitViewModel extends ViewModel {
 
     private MutableLiveData<String> stringResultUpdate = null;
     private MutableLiveData<String> stringResultPost = null;
@@ -82,14 +82,5 @@ public class MainViewModel extends ViewModel {
             }
         });
         return  stringResultPost;
-    }
-
-    public void startGetLocationService(Activity activity, BroadcastReceiver receiver){
-        IntentFilter filter = new IntentFilter("ACT_LOC");
-        // Đăng ký BR
-        activity.registerReceiver(receiver, filter);
-//        Toast.makeText(this, "registerReceiver success", Toast.LENGTH_SHORT).show();
-        Intent intent = new Intent(activity, GetLocationService.class);
-        activity.startService(intent);
     }
 }
